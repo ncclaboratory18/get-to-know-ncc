@@ -8,7 +8,8 @@ Tanggal: 5 November 2026 (Asia/Jakarta). Implementasi lokal, belum dipublikasika
 | --- | --- | --- |
 | TypeScript dan build produksi | Lulus | `npm run build`; keluaran statis di `dist/`. |
 | Logika inti | 15 pengujian lulus | `npm test`; UTF-8, kapasitas, alpha, validasi format, tiga gambar kasus, pencocokan kode, ekspor PNG lossless, forensik, serta simulasi server. |
-| Alur browser Brave | 20 skenario lulus | Seluruh suite dijalankan dengan executable Brave `156.1.98.63`, headless, pada konfigurasi mobile dan desktop melalui `BRAVE_EXECUTABLE`. |
+| Alur browser Brave — baseline | 20 skenario lulus | Suite sebelum penambahan section Safari Lab dijalankan dengan Brave `156.1.98.63`, headless, pada konfigurasi mobile dan desktop melalui `BRAVE_EXECUTABLE`. |
+| Section Safari Lab | 6 pemeriksaan browser lulus | Empat pemeriksaan baru untuk interaksi SVG/konten/keyboard/reduced motion dan dua pemeriksaan tata letak seluruh rute, melalui Brave pada konfigurasi mobile serta desktop. |
 | Regresi Canvas di Edge | 6 skenario lulus | Noise privasi, pergantian tampilan/pengulangan semua gambar, dan bitmap Canvas yang dibersihkan, masing-masing pada mobile dan desktop. |
 | Lebar layar | Lulus pemeriksaan overflow | Seluruh tujuh layar pada lebar 360, 430, 768, dan 1280 px; pengujian alur utama juga memakai 390 × 844 px dan 1280 × 900 px. |
 | Reduced motion | Lulus pemeriksaan navigasi/layout | Seluruh layar dapat dibuka dengan preferensi gerak dikurangi. |
@@ -58,3 +59,13 @@ Skenario piksel mencakup jawaban bit keliru, kode salah, perbaikan jawaban, eksp
 - Belum ada service worker untuk akses pertama tanpa internet; tautan profil resmi tetap membutuhkan internet.
 
 Daftar penerimaan lebih luas tersedia pada [rencana verifikasi](verification-plan.md). Laporan ini hanya menyatakan pemeriksaan yang benar-benar dilakukan.
+
+## Pembaruan section Safari Lab
+
+- Konten empat bidang belajar dan lima profesi dipetakan ke halaman 3 dan 10 PDF pengguna; rincian ada pada [sumber konten NCC](ncc-content-sources.md).
+- Build TypeScript dan produksi berhasil setelah penambahan komponen.
+- Ilustrasi peta belajar dan konsol karier diperiksa melalui klik/tap serta Enter/Space. Pilihan mengubah gambar aktif, penjelasan bidang, dan rincian tugas profesi.
+- Pengujian memastikan seluruh layar tidak memiliki horizontal overflow pada 360, 430, 768, dan 1280 px, serta target interaktif konsol minimal 44 × 44 px.
+- Reduced motion menghentikan paket animasi dan mempertahankan interaksi serta konten.
+- Screenshot section baru ditinjau pada mobile 390 px dan desktop 1280 px.
+- Enam pemeriksaan terarah untuk pembaruan ini lulus. Suite yang kini berjumlah 24 skenario tidak seluruhnya diulang karena logika permainan tidak berubah.

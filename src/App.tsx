@@ -5,6 +5,7 @@ import logo from "./assets/ncc-display.png";
 import { AppProvider, missions, useApp } from "./state";
 import { Badge, Icon, MissionArt } from "./components/Visuals";
 import { Modal } from "./components/UI";
+import NccExploration from "./components/NccExploration";
 
 const Pixel = lazy(() => import("./missions/Pixel"));
 const Forensics = lazy(() => import("./missions/Forensics"));
@@ -197,6 +198,7 @@ function Home() {
           </a>
         </div>
       </section>
+      <NccExploration />
     </main>
   );
 }
@@ -396,6 +398,7 @@ function About() {
           </a>
         </div>
       </div>
+      <NccExploration />
     </main>
   );
 }
@@ -532,6 +535,26 @@ function Site() {
           <p>Eksperimen kecil. Wawasan baru.</p>
         </div>
         <span className="footer-its">Teknik Informatika · ITS</span>
+        <nav className="footer-socials" aria-label="Tautan sosial">
+          {[
+            { label: "Instagram", href: "https://www.instagram.com/" },
+            { label: "GitHub", href: "https://github.com/ncclaboratory18" },
+            {
+              label: "LinkedIn",
+              href: "https://www.linkedin.com/company/net-centric-computing-laboratory",
+            },
+          ].map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${label} (tab baru)`}
+            >
+              {label} <Icon name="external" size={14} />
+            </a>
+          ))}
+        </nav>
         {["/misi", "/lencana"].includes(route) && (
           <button className="text-link" onClick={() => setConfirm(true)}>
             <Icon name="reset" size={16} /> Pengunjung Baru

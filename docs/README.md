@@ -7,6 +7,7 @@ Dokumen ini menerjemahkan brief menjadi alur pengalaman yang dapat ditinjau sebe
 | [Alur website](website-flow.md) | Peta navigasi, isi layar, langkah permainan, kondisi hasil, progres, dan perilaku mobile. |
 | [Rencana verifikasi](verification-plan.md) | Skenario penerimaan untuk memeriksa alur dan logika saat implementasi tersedia. |
 | [Hasil verifikasi](verification-results.md) | Pemeriksaan yang sudah dijalankan dan batas cakupannya. |
+| [Sumber konten NCC](ncc-content-sources.md) | Pemetaan halaman PDF Safari Lab ke bidang belajar, prospek karier, dan ilustrasi interaktif. |
 
 ## Status dan batas tahap
 

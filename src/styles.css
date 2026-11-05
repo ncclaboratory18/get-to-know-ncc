@@ -715,6 +715,7 @@ a:focus-visible {
   border-top: 1px solid var(--border);
   padding-block: 30px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -726,6 +727,341 @@ a:focus-visible {
 }
 .footer-its {
   font-size: 11px;
+}
+.footer-socials {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.footer-socials a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-size: 12px;
+}
+.footer-socials a:hover {
+  color: var(--pink);
+}
+
+.ncc-exploration {
+  border-top: 1px solid var(--border);
+  background: radial-gradient(ellipse at 10% 35%, #0e1d5a35, transparent 55%);
+}
+.learning-section,
+.career-section {
+  padding-block: 60px;
+}
+.career-section {
+  border-top: 1px solid var(--border);
+}
+.exploration-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 35px;
+}
+.exploration-heading h2 {
+  font-size: clamp(30px, 3.3vw, 43px);
+  line-height: 1.2;
+  margin-bottom: 0;
+}
+.exploration-heading h2 span {
+  color: var(--muted);
+}
+.exploration-heading > p {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 400px;
+  margin-bottom: 0;
+}
+.learning-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 45px;
+  align-items: center;
+}
+.learning-illustration,
+.career-visual {
+  min-width: 0;
+  background: linear-gradient(145deg, #0e1d5a70, #080613);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px;
+}
+.illustration-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 8px;
+}
+.learning-network,
+.career-console {
+  width: 100%;
+  display: block;
+}
+.learning-illustration > .small-note {
+  font-size: 11px;
+  text-align: center;
+  margin: 0;
+}
+.exploration-hotspot {
+  cursor: pointer;
+  color: var(--muted);
+}
+.exploration-hotspot .hotspot-surface {
+  fill: var(--panel);
+  stroke: var(--blue);
+  stroke-width: 1;
+  transition:
+    fill 0.2s,
+    stroke 0.2s;
+}
+.exploration-hotspot.selected {
+  color: var(--text);
+}
+.exploration-hotspot.selected .hotspot-surface {
+  fill: var(--surface);
+  stroke: var(--pink);
+  stroke-width: 2;
+}
+.exploration-hotspot:hover .hotspot-surface {
+  stroke: var(--text);
+}
+.exploration-hotspot:focus-visible {
+  outline: none;
+}
+.exploration-hotspot:focus-visible .hotspot-surface {
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.exploration-count {
+  color: var(--pink);
+  font-size: 10px;
+}
+.learning-copy h3 {
+  font-size: 38px;
+  margin: 15px 0;
+}
+.learning-copy > p {
+  font-size: 15px;
+  color: var(--muted);
+}
+.learning-copy > .learning-tagline {
+  font-size: 20px;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 15px;
+}
+.learning-example {
+  display: flex;
+  gap: 12px;
+  padding: 18px 0 18px 16px;
+  border-left: 2px solid var(--pink);
+  margin: 24px 0;
+  background: #293a8120;
+}
+.learning-example > svg {
+  color: var(--pink);
+  margin-top: 4px;
+}
+.learning-example p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+.learning-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.learning-choices button {
+  padding: 10px 13px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  font-size: 12px;
+  color: var(--muted);
+}
+.learning-choices button[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--pink);
+  background: #ff3b860a;
+}
+.career-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+.career-visual {
+  position: sticky;
+  top: 25px;
+}
+.career-console {
+  margin-top: 12px;
+}
+.career-visual h3 {
+  font-size: 25px;
+  margin: 20px 0 13px;
+}
+.career-visual > p {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+.career-visual-note {
+  font-size: 8px;
+  color: var(--blue);
+}
+.career-list {
+  border-top: 1px solid var(--border);
+}
+.career-row {
+  border-bottom: 1px solid var(--border);
+}
+.career-row h3 {
+  margin: 0;
+}
+.career-row h3 > button {
+  display: flex;
+  width: 100%;
+  min-height: 80px;
+  padding: 22px 5px;
+  align-items: center;
+  gap: 18px;
+  text-align: left;
+  background: transparent;
+  font-size: 21px;
+  line-height: 1.3;
+}
+.career-row button > .mono {
+  color: var(--blue);
+  font-size: 10px;
+}
+.career-row button > span:nth-child(2) {
+  flex: 1;
+}
+.career-row button > svg {
+  color: var(--muted);
+}
+.career-row.selected button > .mono,
+.career-row.selected button > svg {
+  color: var(--pink);
+}
+.career-row ul {
+  margin: 0 0 24px 37px;
+  padding-left: 20px;
+  color: var(--muted);
+}
+.career-row li {
+  font-size: 14px;
+  line-height: 1.75;
+  padding: 4px 0 4px 5px;
+}
+.career-row li::marker {
+  color: var(--pink);
+}
+.exploration-source {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 28px 0 0;
+}
+.about-page > .ncc-exploration {
+  margin-top: 60px;
+}
+.about-page .ncc-exploration .container {
+  width: 100%;
+}
+@media (max-width: 900px) {
+  .learning-layout,
+  .career-layout {
+    gap: 25px;
+  }
+  .exploration-heading {
+    gap: 25px;
+  }
+  .exploration-heading > p {
+    max-width: 330px;
+    font-size: 13px;
+  }
+  .learning-copy h3 {
+    font-size: 31px;
+  }
+  .learning-copy > .learning-tagline {
+    font-size: 18px;
+  }
+  .career-row h3 > button {
+    font-size: 18px;
+    gap: 12px;
+  }
+}
+@media (max-width: 700px) {
+  .learning-section,
+  .career-section {
+    padding-block: 38px;
+  }
+  .exploration-heading {
+    display: block;
+    margin-bottom: 25px;
+  }
+  .exploration-heading > p {
+    max-width: none;
+    font-size: 15px;
+    margin-top: 18px;
+  }
+  .exploration-heading h2 {
+    font-size: 30px;
+  }
+  .learning-layout,
+  .career-layout {
+    grid-template-columns: 1fr;
+  }
+  .learning-illustration,
+  .career-visual {
+    padding: 16px;
+  }
+  .learning-illustration > .small-note {
+    font-size: 10px;
+  }
+  .illustration-caption {
+    font-size: 7px;
+  }
+  .learning-copy > p {
+    font-size: 16px;
+  }
+  .learning-copy > .learning-tagline {
+    font-size: 21px;
+  }
+  .learning-example p,
+  .career-visual > p {
+    font-size: 15px;
+  }
+  .career-visual {
+    position: static;
+  }
+  .career-row h3 > button {
+    font-size: 20px;
+    gap: 14px;
+  }
+  .career-row li {
+    font-size: 15px;
+  }
+  .career-row ul {
+    margin-left: 27px;
+  }
+  .exploration-source {
+    font-size: 10px;
+  }
+}
+@media (max-width: 600px) {
+  .footer-socials {
+    flex-basis: 100%;
+  }
 }
 .site-footer .text-link {
   font-size: 11px;

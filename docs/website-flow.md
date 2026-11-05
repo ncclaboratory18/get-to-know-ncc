@@ -302,6 +302,8 @@ Tampilkan progres **0/3** sampai **3/3**, tanpa kewajiban melengkapinya. Kalimat
 
 ### Profil lab
 
+Beranda dan halaman profil juga memiliki section **Belajar apa di NCC?** serta **NCC Career Prospect**, berdasarkan halaman 3 dan 10 PDF Safari Lab dari pengguna. Peta SVG empat bidang dan konsol SVG lima profesi bisa dipilih melalui sentuhan, klik, atau keyboard; pilihan mengubah penjelasan dan gambar aktif. Daftar tanggung jawab profesi dapat dibuka untuk melihat rinciannya. Lihat [pemetaan sumber konten](ncc-content-sources.md).
+
 Gunakan informasi yang diberikan dalam brief:
 
 - NCC adalah Laboratorium Net-Centric Computing atau Komputasi Berbasis Jaringan di Departemen Teknik Informatika ITS.
