@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { serverPresentation } from "../core/server";
 import type { ServerState } from "../core/server";
 export default function ServerCanvas({
   state,
@@ -20,7 +21,7 @@ export default function ServerCanvas({
       phase = 0,
       last = 0;
     const W = 720,
-      H = 380,
+      H = 440,
       dpr = Math.min(devicePixelRatio || 1, 2);
     el.width = W * dpr;
     el.height = H * dpr;
@@ -53,6 +54,42 @@ export default function ServerCanvas({
       ctx.textAlign = "center";
       ctx.fillText(value, x, y);
     };
+    const packet = (x: number, y: number, queued = false) => {
+      ctx.save();
+      ctx.fillStyle = "#293A81";
+      ctx.strokeStyle = queued ? "#FF3B86" : "#E5D6F7";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.roundRect(x - 12, y - 9, 24, 18, 3);
+      ctx.fill();
+      ctx.stroke();
+      line(
+        [
+          [x - 11, y - 7],
+          [x, y + 1],
+          [x + 11, y - 7],
+        ],
+        queued ? "#FF3B86" : "#A99CD5",
+        1.5,
+      );
+      line(
+        [
+          [x - 11, y + 7],
+          [x - 5, y + 1],
+        ],
+        "#4876B8",
+        1,
+      );
+      line(
+        [
+          [x + 11, y + 7],
+          [x + 5, y + 1],
+        ],
+        "#4876B8",
+        1,
+      );
+      ctx.restore();
+    };
     function draw(now: number) {
       const s = data.current,
         n = s.queues.length;
@@ -78,10 +115,9 @@ export default function ServerCanvas({
           "#293A81",
         );
       ctx!.globalAlpha = 1;
-      const lb = [360, 112],
-        positions = Array.from({ length: n }, (_, i) =>
-          n === 1 ? 360 : 100 + (i * 520) / (n - 1),
-        );
+      const positions = Array.from({ length: n }, (_, i) =>
+        n === 1 ? 360 : 100 + (i * 520) / (n - 1),
+      );
       for (let u = 0; u < 7; u++) {
         const ux = 180 + u * 60;
         ctx!.beginPath();
@@ -116,6 +152,8 @@ export default function ServerCanvas({
         10,
       );
       positions.forEach((x, i) => {
+        const presentation = serverPresentation(s, i);
+        const { overloaded, queueCount } = presentation;
         const active = s.distribution === "even" || i === 0;
         line(
           [
@@ -124,8 +162,8 @@ export default function ServerCanvas({
             [x, 163],
             [x, 221],
           ],
-          active ? "#4876B8" : "#293A81",
-          active ? 2 : 1,
+          overloaded ? "#FF3B86" : active ? "#4876B8" : "#293A81",
+          overloaded ? 3 : active ? 2 : 1,
         );
         if (active) {
           const rate = s.distribution === "even" ? s.users / n : s.users;
@@ -144,16 +182,9 @@ export default function ServerCanvas({
             for (let seg = 0; seg < 3; seg++) {
               if (distance <= lengths[seg] || seg === 2) {
                 const t = lengths[seg] ? distance / lengths[seg] : 0;
-                ctx!.fillStyle = "#FF3B86";
-                ctx!.fillRect(
-                  points[seg][0] +
-                    (points[seg + 1][0] - points[seg][0]) * t -
-                    3,
-                  points[seg][1] +
-                    (points[seg + 1][1] - points[seg][1]) * t -
-                    3,
-                  6,
-                  6,
+                packet(
+                  points[seg][0] + (points[seg + 1][0] - points[seg][0]) * t,
+                  points[seg][1] + (points[seg + 1][1] - points[seg][1]) * t,
                 );
                 break;
               }
@@ -162,6 +193,30 @@ export default function ServerCanvas({
           }
         }
         const load = s.loads[i];
+        const pulse =
+          paused || media.matches ? 0.5 : 0.5 + Math.sin(phase * 4) * 0.5;
+        if (overloaded) {
+          ctx!.save();
+          ctx!.globalAlpha = 0.12 + pulse * 0.09;
+          ctx!.fillStyle = "#FF3B86";
+          ctx!.beginPath();
+          ctx!.roundRect(x - 55, 211, 114, 120, 16);
+          ctx!.fill();
+          ctx!.globalAlpha = 0.7;
+          ctx!.strokeStyle = "#FF3B86";
+          ctx!.lineWidth = 2;
+          ctx!.stroke();
+          ctx!.restore();
+        }
+        // Getaran kecil hanya pada server yang kelebihan beban, bukan seluruh kanvas.
+        ctx!.save();
+        if (overloaded && !paused && !media.matches)
+          ctx!.translate(Math.sin(phase * 14 + i) * 1.5, 0);
+        if (overloaded) {
+          ctx!.shadowColor = "#FF3B86";
+          ctx!.shadowBlur = 10 + pulse * 8;
+        }
+        const edge = overloaded ? "#FF3B86" : "#4876B8";
         polygon(
           [
             [x - 31, 232],
@@ -170,6 +225,7 @@ export default function ServerCanvas({
             [x + 5, 250],
           ],
           "#4876B8",
+          edge,
         );
         polygon(
           [
@@ -179,6 +235,7 @@ export default function ServerCanvas({
             [x - 31, 305],
           ],
           "#293A81",
+          edge,
         );
         polygon(
           [
@@ -188,7 +245,9 @@ export default function ServerCanvas({
             [x + 5, 323],
           ],
           "#0E1D5A",
+          edge,
         );
+        ctx!.shadowBlur = 0;
         for (let slot = 0; slot < 3; slot++) {
           line(
             [
@@ -198,20 +257,49 @@ export default function ServerCanvas({
             "#A99CD5",
             2,
           );
-          ctx!.fillStyle = load > 0.85 ? "#FF3B86" : "#E5D6F7";
+          ctx!.fillStyle = overloaded ? "#FF3B86" : "#E5D6F7";
           ctx!.fillRect(x + 13, 258 + slot * 18, 4, 4);
         }
+        if (overloaded) {
+          polygon(
+            [
+              [x - 12, 267],
+              [x - 26, 292],
+              [x + 2, 292],
+            ],
+            "#080613",
+            "#FF3B86",
+          );
+          line(
+            [
+              [x - 12, 276],
+              [x - 12, 282],
+            ],
+            "#E5D6F7",
+            2,
+          );
+          ctx!.fillStyle = "#E5D6F7";
+          ctx!.fillRect(x - 13, 286, 2, 2);
+        }
+        ctx!.restore();
         ctx!.fillStyle = "#293A81";
         ctx!.fillRect(x - 32, 340, 68, 4);
-        ctx!.fillStyle = load > 0.85 ? "#FF3B86" : "#4876B8";
+        ctx!.fillStyle = overloaded ? "#FF3B86" : "#4876B8";
         ctx!.fillRect(x - 32, 340, 68 * load, 4);
         text(`SERVER ${i + 1}`, x, 365, "#E5D6F7");
         text(
-          `${Math.round(load * 100)}%`,
+          overloaded ? "! OVERLOAD" : `${Math.round(load * 100)}%`,
           x,
           205,
-          load > 0.85 ? "#FF3B86" : "#A99CD5",
+          overloaded ? "#FF3B86" : "#A99CD5",
+          overloaded ? 13 : 11,
         );
+        if (queueCount > 0) {
+          const icons = Math.min(4, Math.ceil(queueCount / 5));
+          for (let q = 0; q < icons; q++)
+            packet(x + (q - (icons - 1) / 2) * 22, 390, true);
+          text(`ANTREAN ${queueCount}`, x, 423, "#FF3B86", 12);
+        } else text("TANPA ANTREAN", x, 403, "#A99CD5", 9);
       });
       polygon(
         [
@@ -245,7 +333,10 @@ export default function ServerCanvas({
       if (!paused && !media.matches) frame = requestAnimationFrame(draw);
     }
     repaint.current = () => {
-      if (paused || media.matches) draw(performance.now());
+      // Sinkronkan label Canvas dengan indikator DOM pada langkah simulasi
+      // yang sama, sambil mempertahankan hanya satu animation loop.
+      cancelAnimationFrame(frame);
+      draw(performance.now());
     };
     draw(performance.now());
     const changed = () => {
@@ -268,7 +359,7 @@ export default function ServerCanvas({
       ref={canvas}
       className="server-canvas"
       role="img"
-      aria-label={`${state.users} pengguna mengirim permintaan melalui load balancer ke ${state.queues.length} server. Distribusi ${state.distribution === "even" ? "merata" : "menumpuk di server pertama"}. Detail beban dan antrean tersedia di bawah visual.`}
+      aria-label={`${state.users} pengguna mengirim paket permintaan melalui load balancer ke ${state.queues.length} server. Distribusi ${state.distribution === "even" ? "merata" : "menumpuk di server pertama"}. ${state.queues.map((_, i) => `Server ${i + 1}: ${serverPresentation(state, i).label}, antrean ${serverPresentation(state, i).queueCount}`).join(". ")}. Detail beban dan antrean tersedia di bawah visual.`}
     />
   );
 }

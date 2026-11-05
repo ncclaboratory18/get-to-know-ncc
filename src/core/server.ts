@@ -25,6 +25,27 @@ export function initialServer(): ServerState {
 }
 export const scheduledUsers = (t: number) =>
   t < 8 ? 20 : t < 16 ? 50 : t < 24 ? 70 : 30;
+
+export function serverPresentation(state: ServerState, index: number) {
+  const incoming =
+    state.distribution === "even"
+      ? state.users / state.queues.length
+      : index === 0
+        ? state.users
+        : 0;
+  const queue = state.queues[index];
+  const overloaded = incoming > 20 || queue > 0.001;
+  return {
+    overloaded,
+    label: overloaded
+      ? "OVERLOAD"
+      : state.loads[index] >= 0.85
+        ? "SIBUK"
+        : "STABIL",
+    queueCount: queue > 0.001 ? Math.ceil(queue) : 0,
+    incoming,
+  };
+}
 export function resizeServers(state: ServerState, count: number): ServerState {
   count = Math.max(1, Math.min(4, count));
   const queues = [...state.queues];

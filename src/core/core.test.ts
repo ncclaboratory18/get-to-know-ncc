@@ -7,7 +7,12 @@ import {
   makeImage,
 } from "./steganography";
 import { checkTimeline } from "./forensics";
-import { initialServer, resizeServers, stepServer } from "./server";
+import {
+  initialServer,
+  resizeServers,
+  serverPresentation,
+  stepServer,
+} from "./server";
 import {
   createPixelCase,
   findChangedPixel,
@@ -87,6 +92,31 @@ describe("kasus forensik", () => {
   });
 });
 describe("simulasi server", () => {
+  it("kapasitas penuh belum overload dan server tanpa kiriman tidak diberi alarm", () => {
+    const full = stepServer(initialServer(), 0.1, false, 40);
+    expect(serverPresentation(full, 0)).toMatchObject({
+      overloaded: false,
+      label: "SIBUK",
+    });
+    const single = stepServer(
+      { ...initialServer(), distribution: "single" },
+      0.1,
+      false,
+      100,
+    );
+    expect(serverPresentation(single, 0).overloaded).toBe(true);
+    expect(serverPresentation(single, 1)).toMatchObject({
+      overloaded: false,
+      label: "STABIL",
+      incoming: 0,
+    });
+  });
+  it("alarm tetap aktif selama ada antrean dan pulih setelah antrean habis", () => {
+    const pending = { ...initialServer(), queues: [2, 0], users: 0 };
+    expect(serverPresentation(pending, 0).overloaded).toBe(true);
+    const recovered = stepServer(pending, 0.2, false, 0);
+    expect(serverPresentation(recovered, 0).overloaded).toBe(false);
+  });
   it("mengukur beban dari antrean yang diproses pada langkah itu", () => {
     const cleared = stepServer(
       { ...resizeServers(initialServer(), 1), queues: [1] },

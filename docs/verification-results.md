@@ -7,9 +7,10 @@ Tanggal: 5 November 2026 (Asia/Jakarta). Implementasi lokal, belum dipublikasika
 | Pemeriksaan | Hasil | Cakupan |
 | --- | --- | --- |
 | TypeScript dan build produksi | Lulus | `npm run build`; keluaran statis di `dist/`. |
-| Logika inti | 15 pengujian lulus | `npm test`; UTF-8, kapasitas, alpha, validasi format, tiga gambar kasus, pencocokan kode, ekspor PNG lossless, forensik, serta simulasi server. |
+| Logika inti | 17 pengujian lulus | `npm test`; pengujian sebelumnya ditambah klasifikasi kapasitas penuh/overload serta pemulihan antrean. |
 | Alur browser Brave — baseline | 20 skenario lulus | Suite sebelum penambahan section Safari Lab dijalankan dengan Brave `156.1.98.63`, headless, pada konfigurasi mobile dan desktop melalui `BRAVE_EXECUTABLE`. |
 | Section Safari Lab | 6 pemeriksaan browser lulus | Empat pemeriksaan baru untuk interaksi SVG/konten/keyboard/reduced motion dan dua pemeriksaan tata letak seluruh rute, melalui Brave pada konfigurasi mobile serta desktop. |
+| Visual server overload | 10 pemeriksaan browser lulus | Empat pemeriksaan baru tentang alarm/pemulihan/reduced motion serta enam regresi tantangan/jeda/tata letak, melalui Brave pada konfigurasi mobile dan desktop. |
 | Regresi Canvas di Edge | 6 skenario lulus | Noise privasi, pergantian tampilan/pengulangan semua gambar, dan bitmap Canvas yang dibersihkan, masing-masing pada mobile dan desktop. |
 | Lebar layar | Lulus pemeriksaan overflow | Seluruh tujuh layar pada lebar 360, 430, 768, dan 1280 px; pengujian alur utama juga memakai 390 × 844 px dan 1280 × 900 px. |
 | Reduced motion | Lulus pemeriksaan navigasi/layout | Seluruh layar dapat dibuka dengan preferensi gerak dikurangi. |
@@ -69,3 +70,12 @@ Daftar penerimaan lebih luas tersedia pada [rencana verifikasi](verification-pla
 - Reduced motion menghentikan paket animasi dan mempertahankan interaksi serta konten.
 - Screenshot section baru ditinjau pada mobile 390 px dan desktop 1280 px.
 - Enam pemeriksaan terarah untuk pembaruan ini lulus. Suite yang kini berjumlah 24 skenario tidak seluruhnya diulang karena logika permainan tidak berubah.
+
+## Pembaruan visual load balancer
+
+- Paket permintaan diubah menjadi amplop digital, dengan jalur sesuai distribusi dan tumpukan antrean yang jumlah ikonnya dibatasi. Angka antrean tetap berasal dari simulasi.
+- Server overload memiliki halo/pinggiran pink, ikon peringatan pada rack, getaran kecil, label OVERLOAD, jalur tersorot, banner, dan indikator per server. Server tanpa kiriman tidak ikut diberi alarm.
+- Status beban dibedakan antara kapasitas penuh tanpa antrean dan overload yang masih menumpuk permintaan. Alarm pulih setelah kapasitas mencukupi dan antrean habis.
+- Canvas dan DOM membaca klasifikasi dari fungsi yang sama. Repaint menyelaraskan angka keduanya tanpa membuat animation loop tambahan.
+- Reduced motion dan jeda menghentikan getaran/pulsasi, sementara informasi status tetap terlihat.
+- Screenshot overload ditinjau pada HP dan desktop. Sepuluh pemeriksaan terarah lulus, termasuk tantangan menang, jeda, lebar 360–1280 px, dan pemulihan overload. Suite kini berjumlah 28 skenario; bagian di luar cakupan perubahan tidak seluruhnya diulang.

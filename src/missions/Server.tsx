@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { initialServer, resizeServers, stepServer } from "../core/server";
+import {
+  initialServer,
+  resizeServers,
+  serverPresentation,
+  stepServer,
+} from "../core/server";
 import { MissionFrame, Result } from "../components/UI";
 import { Icon } from "../components/Visuals";
 import ServerCanvas from "../components/ServerCanvas";
@@ -43,6 +48,9 @@ export default function Server() {
   }
   const total = state.queues.reduce((a, b) => a + b, 0),
     finished = state.status !== "running";
+  const overloadedCount = state.queues.filter(
+    (_, i) => serverPresentation(state, i).overloaded,
+  ).length;
   const phase =
     state.time < 8
       ? "Pemain mulai masuk"
@@ -139,7 +147,9 @@ export default function Server() {
         </section>
       )}
       <div className="game-layout server-layout">
-        <section className="network-panel panel">
+        <section
+          className={`network-panel panel ${overloadedCount ? "is-overloaded" : ""}`}
+        >
           <div className="panel-caption">
             <span className="mono">LIVE / JARINGAN GIM SEKOLAH</span>
             <span className="status-pill">
@@ -152,6 +162,24 @@ export default function Server() {
                     : "Latihan bebas"}
             </span>
           </div>
+          <div
+            className={`network-health ${overloadedCount ? "is-overloaded" : ""}`}
+            role="status"
+          >
+            <Icon name={overloadedCount ? "warning" : "check"} size={22} />
+            <div>
+              <b>
+                {overloadedCount
+                  ? `${overloadedCount} server overload`
+                  : "Jaringan stabil"}
+              </b>
+              <p>
+                {overloadedCount
+                  ? "Paket menumpuk. Bagi permintaan secara merata atau tambah kapasitas server."
+                  : "Pantau kapasitas dan antrean saat jumlah pengguna bertambah."}
+              </p>
+            </div>
+          </div>
           {mode === "challenge" && (
             <div className="challenge-timer">
               <div style={{ width: `${(state.time / 30) * 100}%` }} />
@@ -160,23 +188,46 @@ export default function Server() {
           )}
           <ServerCanvas state={state} paused={paused} />
           <div className="network-caption">
-            <span className="live-dot" />
+            <Icon name="packet" size={18} />
             <span>
               Setiap paket mewakili beberapa permintaan. Jalurnya mengikuti
               distribusi yang kamu pilih.
             </span>
           </div>
+          <div className="packet-legend" aria-label="Legenda paket permintaan">
+            <span>
+              <Icon name="packet" size={18} /> Paket berjalan
+            </span>
+            <span>
+              <Icon name="packet" size={18} /> Paket mengantre
+            </span>
+          </div>
           <div className="server-loads">
-            {state.queues.map((queue, i) => {
+            {state.queues.map((_, i) => {
               const load = state.loads[i] * 100;
+              const presentation = serverPresentation(state, i);
               return (
-                <div key={i}>
-                  <span className="mono">S{i + 1}</span>
+                <div
+                  key={i}
+                  className={`server-load-card ${presentation.overloaded ? "is-overloaded" : ""}`}
+                >
+                  <div className="server-load-heading">
+                    <span className="mono">SERVER {i + 1}</span>
+                    <b>{Math.round(load)}%</b>
+                    <span className="server-load-label">
+                      <Icon
+                        name={presentation.overloaded ? "warning" : "check"}
+                        size={14}
+                      />
+                      {presentation.label}
+                    </span>
+                  </div>
                   <div className="load-meter">
                     <span style={{ width: `${load}%` }} />
                   </div>
-                  <span>{Math.round(load)}%</span>
-                  <span className="small-note">Antrean {queue.toFixed(0)}</span>
+                  <span className="small-note">
+                    {presentation.queueCount} permintaan mengantre
+                  </span>
                 </div>
               );
             })}

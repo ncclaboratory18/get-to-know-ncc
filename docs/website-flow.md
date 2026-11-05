@@ -246,6 +246,10 @@ Logika simulasi terpisah dari renderer, dengan langkah tetap 0,1 detik waktu sim
 
 Paket visual boleh mewakili beberapa permintaan demi performa, dengan kepadatan proporsional terhadap laju aktual. Penghitungan antrean tidak bergantung pada jumlah partikel atau frame layar.
 
+Paket bergerak berbentuk amplop digital, mengikuti jalur distribusi sebenarnya. Antrean digambarkan dengan tumpukan amplop berbingkai pink dan angka permintaan yang menunggu. Jumlah ikon dibatasi agar ringan; angka menunjukkan jumlah antrean simulasi.
+
+Server diberi status **OVERLOAD** saat laju masuk melebihi 20 permintaan/detik atau masih memiliki antrean. Pada kapasitas penuh tanpa antrean, statusnya **SIBUK**. Overload menyalakan bingkai/glow pink, ikon peringatan, getaran halus pada rack, sorotan jalur, banner ringkas, dan penanda pada indikator per server. Efek hilang setelah antrean terlayani dan permintaan kembali sesuai kapasitas. Reduced motion serta jeda menonaktifkan gerak/pulsasi, dengan label, ikon, dan sorotan statis tetap tersedia.
+
 ### Tantangan 30 detik
 
 Sebelum mulai, tampilkan target: **“Jaga respons ≤1 detik selama minimal 24 dari 30 detik, sisakan antrean maksimal 20 permintaan saat selesai, dan jangan habiskan anggaran sebelum waktu berakhir.”**

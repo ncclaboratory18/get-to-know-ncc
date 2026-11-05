@@ -70,6 +70,9 @@ Mesin simulasi diperiksa terpisah dari renderer, menggunakan langkah waktu tetap
 | S11 | Sembunyikan tab atau buka petunjuk saat tantangan. | Timer, antrean, dan biaya berhenti; tidak ada loncatan saat kembali. Lanjut hanya setelah tindakan Lanjutkan dan semua alasan jeda selesai. |
 | S12 | Uji input terjadwal sama pada laju render berbeda. | Hasil simulasi sama; jumlah partikel atau frame tidak memengaruhi perhitungan. |
 | S13 | Ulangi tantangan setelah menang dan gagal. | Semua state percobaan kembali ke awal; Cloud Architect lama tetap tersimpan. |
+| S14 | Kirim 70 permintaan/detik ke satu server, lalu turunkan pengguna ke nol. | Hanya server penerima berstatus OVERLOAD; sorotan/paket antrean menghilang setelah antreannya habis. |
+| S15 | Jalankan simulasi overload dengan reduced motion. | Banner, ikon, label status, dan antrean tetap terlihat tanpa getaran atau pulsasi. |
+| S16 | Kapasitas tepat penuh, tanpa antrean. | Status SIBUK; tidak salah menandai OVERLOAD. |
 
 ## 5. Penyimpanan dan reset
 

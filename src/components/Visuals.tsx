@@ -19,6 +19,8 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     pause: "M8 5v14M16 5v14",
     play: "m8 4 12 8-12 8V4Z",
     shield: "M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6l-9-4Z",
+    warning: "M12 3 22 21H2L12 3Zm0 6v5m0 3v1",
+    packet: "M3 5h18v14H3V5Zm0 0 9 7 9-7",
   };
   return (
     <svg
