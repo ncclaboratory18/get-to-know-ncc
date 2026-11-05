@@ -4,7 +4,7 @@ Website interaktif untuk memperkenalkan Laboratorium Net-Centric Computing, Depa
 
 Tiga misi dapat dimainkan bebas tanpa akun atau backend:
 
-- **Pesan di Balik Piksel:** steganografi LSB RGB nyata, pesan UTF-8, perbandingan gambar, pembesar piksel, decoding dari Canvas, dan unduhan PNG.
+- **Bongkar Pesan Rahasia:** selidiki piksel gambar kiriman, pecahkan petunjuk, baca kode tersembunyi, dan buka berkas NCC. Setelah berhasil, coba menyisipkan pesan UTF-8 sendiri dan mengunduh hasil PNG. Penyisipan serta decoding memakai LSB RGB nyata melalui Canvas.
 - **Detektif Jejak Digital:** kasus fiktif, pemilihan bukti, linimasa dengan tombol pengurutan, dan kesimpulan berdasarkan bukti.
 - **Selamatkan Server!:** latihan kapasitas serta tantangan 30 detik dengan distribusi permintaan, antrean, anggaran, dan lonjakan terjadwal.
 

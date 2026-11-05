@@ -1,416 +1,530 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { decode } from "../core/steganography";
 import {
-  byteLength,
-  capacity,
-  decode,
-  encode,
-  makeImage,
-} from "../core/steganography";
+  CASE_SIZE,
+  caseImages,
+  createPixelCase,
+  findChangedPixel,
+  matchesAccessCode,
+} from "../core/pixel-case";
 import { MissionFrame, Result } from "../components/UI";
 import { Icon } from "../components/Visuals";
+import PixelWorkshop from "./PixelWorkshop";
 
-const SIZE = 192;
-const names = ["Kota Terhubung", "Gelombang Digital", "Mosaik Lab"];
 export default function Pixel() {
-  const [kind, setKind] = useState(0),
-    [message, setMessage] = useState("Sampai jumpa di NCC!");
-  const original = useMemo(() => makeImage(kind, SIZE), [kind]);
-  const [output, setOutput] = useState<Uint8ClampedArray | null>(null);
-  const [view, setView] = useState<"original" | "encoded">("original");
+  const [kind, setKind] = useState(0);
+  const { original, encoded } = useMemo(() => createPixelCase(kind), [kind]);
   const [point, setPoint] = useState({ x: 0, y: 0 });
+  const [view, setView] = useState<"original" | "encoded">("encoded");
+  const [inspected, setInspected] = useState(false);
+  const [analyzed, setAnalyzed] = useState(false);
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [answer, setAnswer] = useState("");
+  const [won, setWon] = useState(false),
+    [workshop, setWorkshop] = useState(false);
   const [feedback, setFeedback] = useState(""),
-    [revealed, setRevealed] = useState<string | null>(null),
-    [available, setAvailable] = useState(true);
-  const originalCanvas = useRef<HTMLCanvasElement>(null),
+    [codeFeedback, setCodeFeedback] = useState("");
+  const [available, setAvailable] = useState(true);
+  const sourceCanvas = useRef<HTMLCanvasElement>(null),
     encodedCanvas = useRef<HTMLCanvasElement>(null),
     zoom = useRef<HTMLCanvasElement>(null);
-  const limit = Math.min(160, capacity(original));
-  const bytes = byteLength(message);
+  const messageHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     for (const [ref, data] of [
-      [originalCanvas, original],
-      [encodedCanvas, output || original],
+      [sourceCanvas, original],
+      [encodedCanvas, encoded],
     ] as const) {
       const ctx = ref.current?.getContext("2d");
       if (!ctx) {
         setAvailable(false);
         continue;
       }
-      const image = ctx.createImageData(SIZE, SIZE);
-      image.data.set(data);
-      ctx.putImageData(image, 0, 0);
+      const pixels = ctx.createImageData(CASE_SIZE, CASE_SIZE);
+      pixels.data.set(data);
+      ctx.putImageData(pixels, 0, 0);
     }
-  }, [original, output, available]);
+  }, [original, encoded]);
   useEffect(() => {
     const ctx = zoom.current?.getContext("2d");
     if (!ctx) return;
-    const data = view === "encoded" && output ? output : original;
+    const data = view === "encoded" ? encoded : original;
     ctx.clearRect(0, 0, 210, 210);
     for (let dy = -3; dy <= 3; dy++)
       for (let dx = -3; dx <= 3; dx++) {
-        const x = Math.max(0, Math.min(SIZE - 1, point.x + dx)),
-          y = Math.max(0, Math.min(SIZE - 1, point.y + dy));
-        const i = (y * SIZE + x) * 4;
-        ctx.fillStyle = `rgb(${data[i]},${data[i + 1]},${data[i + 2]})`;
+        const x = Math.max(0, Math.min(CASE_SIZE - 1, point.x + dx)),
+          y = Math.max(0, Math.min(CASE_SIZE - 1, point.y + dy)),
+          index = (y * CASE_SIZE + x) * 4;
+        ctx.fillStyle = `rgb(${data[index]},${data[index + 1]},${data[index + 2]})`;
         ctx.fillRect((dx + 3) * 30, (dy + 3) * 30, 29, 29);
       }
     ctx.strokeStyle = "#E5D6F7";
     ctx.lineWidth = 2;
     ctx.strokeRect(91, 91, 27, 27);
-  }, [point, output, original, view]);
-  function invalidate() {
-    setOutput(null);
-    setRevealed(null);
-    setView("original");
-    setFeedback("");
-  }
-  function restart() {
-    setKind(0);
-    setMessage("Sampai jumpa di NCC!");
+  }, [point, view, original, encoded, inspected]);
+  useEffect(() => {
+    if (revealed !== null) messageHeading.current?.focus();
+  }, [revealed]);
+  const index = (point.y * CASE_SIZE + point.x) * 4;
+  const channel = [0, 1, 2].find(
+    (c) => original[index + c] !== encoded[index + c],
+  );
+  function resetCase(nextKind = kind) {
+    setKind(nextKind);
     setPoint({ x: 0, y: 0 });
-    invalidate();
-  }
-  function insert() {
-    try {
-      const ctx = originalCanvas.current?.getContext("2d");
-      if (!ctx) throw new Error("Canvas tidak tersedia.");
-      const pixels = ctx.getImageData(0, 0, SIZE, SIZE).data;
-      setOutput(encode(pixels, message));
-      setView("encoded");
-      setRevealed(null);
-      setFeedback(
-        "Kelihatannya sama, tetapi sebagian nilai pikselnya menyimpan pesanmu.",
-      );
-    } catch (e) {
-      setFeedback((e as Error).message);
-    }
-  }
-  function reveal() {
-    try {
-      const ctx = encodedCanvas.current?.getContext("2d");
-      if (!ctx) throw new Error("Canvas tidak tersedia.");
-      setRevealed(decode(ctx.getImageData(0, 0, SIZE, SIZE).data));
-      setFeedback("Pesan berhasil dibaca langsung dari piksel gambar.");
-    } catch (e) {
-      setFeedback((e as Error).message);
-    }
+    setView("encoded");
+    setInspected(false);
+    setAnalyzed(false);
+    setRevealed(null);
+    setAnswer("");
+    setWon(false);
+    setWorkshop(false);
+    setFeedback("");
+    setCodeFeedback("");
   }
   function selectPixel(e: React.MouseEvent<HTMLCanvasElement>) {
     const r = e.currentTarget.getBoundingClientRect();
     setPoint({
       x: Math.max(
         0,
-        Math.min(SIZE - 1, Math.floor(((e.clientX - r.left) / r.width) * SIZE)),
+        Math.min(
+          CASE_SIZE - 1,
+          Math.floor(((e.clientX - r.left) / r.width) * CASE_SIZE),
+        ),
       ),
       y: Math.max(
         0,
-        Math.min(SIZE - 1, Math.floor(((e.clientY - r.top) / r.height) * SIZE)),
+        Math.min(
+          CASE_SIZE - 1,
+          Math.floor(((e.clientY - r.top) / r.height) * CASE_SIZE),
+        ),
       ),
     });
+    setInspected(true);
   }
-  const index = (point.y * SIZE + point.x) * 4;
-  const changedChannel = output
-    ? [0, 1, 2].find((c) => original[index + c] !== output[index + c])
-    : undefined;
-  function findChanged() {
-    if (!output) return;
-    for (let i = 0; i < output.length; i++) {
-      if (i % 4 !== 3 && output[i] !== original[i]) {
-        const p = Math.floor(i / 4);
-        setPoint({ x: p % SIZE, y: Math.floor(p / SIZE) });
-        setView("encoded");
-        return;
-      }
+  function scan() {
+    setPoint(findChangedPixel(original, encoded));
+    setInspected(true);
+    setView("encoded");
+    setFeedback(
+      "Piksel berbeda ditemukan. Bandingkan delapan angka pada nilai warna di bawah gambar.",
+    );
+  }
+  function checkBit(choice: string) {
+    if (choice !== "right") {
+      setFeedback(
+        "Coba bandingkan kedua baris dari kiri ke kanan. Cari satu posisi angka yang berbeda; kamu boleh mencoba lagi.",
+      );
+      return;
+    }
+    setAnalyzed(true);
+    setFeedback(
+      "Tepat! Angka paling kanan berubah. Posisi ini disebut bit terakhir atau LSB; perubahan kecilnya bisa membawa pesan.",
+    );
+  }
+  function readMessage() {
+    if (!analyzed) return;
+    try {
+      const ctx = encodedCanvas.current?.getContext("2d");
+      if (!ctx) throw new Error("Canvas tidak tersedia.");
+      setRevealed(decode(ctx.getImageData(0, 0, CASE_SIZE, CASE_SIZE).data));
+      setCodeFeedback("");
+    } catch (e) {
+      setFeedback((e as Error).message);
     }
   }
-  function download() {
-    encodedCanvas.current?.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "ncc-pesan-rahasia.png";
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }, "image/png");
+  function unlock(e: React.FormEvent) {
+    e.preventDefault();
+    if (!analyzed || revealed === null) return;
+    try {
+      const ctx = encodedCanvas.current?.getContext("2d");
+      if (!ctx) throw new Error("Canvas tidak tersedia.");
+      const freshMessage = decode(
+        ctx.getImageData(0, 0, CASE_SIZE, CASE_SIZE).data,
+      );
+      if (matchesAccessCode(freshMessage, answer)) {
+        setWon(true);
+        setCodeFeedback("");
+      } else
+        setCodeFeedback(
+          "Kode belum cocok. Cari tulisan ‘Kode akses’ pada pesan yang baru kamu baca, lalu masukkan kodenya lengkap.",
+        );
+    } catch (e) {
+      setCodeFeedback((e as Error).message);
+    }
   }
   return (
     <MissionFrame
       index={0}
-      onRestart={restart}
+      onRestart={() => resetCase()}
       hint={
         <>
-          <p>1. Pilih gambar dan tulis pesan maksimal {limit} byte.</p>
           <p>
-            2. Sisipkan pesan, lalu ketuk gambar untuk memeriksa piksel. Tombol
-            arah juga bisa digunakan.
+            <b>Tujuanmu:</b> temukan kode di dalam gambar untuk membuka berkas
+            NCC.
           </p>
           <p>
-            3. Pilih Ungkap Pesan untuk membaca kembali pesan dari piksel hasil.
+            1. Pilih Cari Petunjuk Piksel, atau ketuk gambar dan gunakan tombol
+            arah untuk menemukan nilai warna yang berubah.
           </p>
           <p>
-            Perubahan satu bit pada kanal RGB sangat kecil, sehingga gambar
-            tampak hampir sama. Kanal transparansi (alpha) tetap utuh.
+            2. Bandingkan dua baris angka. Satu posisi paling kanan berbeda.
+            Pilih posisi itu untuk menyiapkan pembaca pesan.
+          </p>
+          <p>
+            3. Baca pesan tersembunyi, lalu ketik kode akses yang ditemukan
+            untuk membuka berkas. Tak perlu menebak kodenya.
+          </p>
+          <p>
+            Setelah berkas terbuka, kamu boleh mencoba menyembunyikan pesanmu
+            sendiri.
           </p>
         </>
       }
     >
       <p className="mission-lead">
-        Sembunyikan pesan di dalam gambar. Lalu lihat: apakah mata kita bisa
-        membedakannya?
+        Sebuah gambar tiba dari laboratorium NCC. Di dalamnya ada kode untuk
+        membuka berkas rahasia. Temukan kodenya!
       </p>
+      <ol className="pixel-steps" aria-label="Tahapan misi">
+        {["Periksa gambar", "Baca pesan", "Buka berkas"].map((label, i) => (
+          <li
+            key={label}
+            aria-current={
+              (i === 0 && !analyzed) ||
+              (i === 1 && analyzed && revealed === null) ||
+              (i === 2 && revealed !== null && !won)
+                ? "step"
+                : undefined
+            }
+            className={
+              (i === 0 && analyzed) ||
+              (i === 1 && revealed !== null) ||
+              (i === 2 && won)
+                ? "complete"
+                : ""
+            }
+          >
+            <span>
+              {(i === 0 && analyzed) ||
+              (i === 1 && revealed !== null) ||
+              (i === 2 && won) ? (
+                <Icon name="check" size={14} />
+              ) : (
+                i + 1
+              )}
+            </span>
+            {label}
+          </li>
+        ))}
+      </ol>
       {!available ? (
         <section className="panel">
           <h2>Canvas tidak tersedia di browser ini.</h2>
           <p>
-            Misi piksel memerlukan Canvas 2D. Kamu tetap bisa mencoba misi
+            Misi ini memerlukan Canvas 2D. Kamu tetap bisa mencoba dua misi
             lainnya.
           </p>
-          <a href="#/misi" className="button primary">
+          <a className="button primary" href="#/misi">
             Pilih Misi Lain
           </a>
         </section>
       ) : (
         <>
-          <div className="game-layout pixel-layout">
-            <section className="pixel-workbench panel">
+          <div className="game-layout pixel-case-layout">
+            <section className="panel pixel-case-board">
               <div className="panel-caption">
-                <span className="mono">01 / MEJA PEMINDAI</span>
+                <span className="mono">BUKTI / GAMBAR KIRIMAN NCC</span>
                 <span className="status-pill">
-                  {output ? "Pesan tersisip" : "Gambar asli"}
+                  {analyzed ? "Petunjuk terpecahkan" : "Pesan belum terbaca"}
                 </span>
               </div>
-              <div
-                className="segmented mobile-comparison"
-                aria-label="Tampilan gambar"
-              >
+              <div className="segmented" aria-label="Bandingkan gambar kasus">
                 <button
-                  aria-pressed={view === "original"}
                   onClick={() => setView("original")}
+                  aria-pressed={view === "original"}
                 >
-                  Asli
+                  Gambar Asli
                 </button>
                 <button
-                  disabled={!output}
-                  aria-pressed={view === "encoded"}
                   onClick={() => setView("encoded")}
+                  aria-pressed={view === "encoded"}
                 >
-                  Berisi Pesan
+                  Gambar Kiriman
                 </button>
               </div>
-              <div className={`image-comparison showing-${view}`}>
-                <figure className="original-figure">
-                  <figcaption className="mono">GAMBAR ASLI</figcaption>
-                  <canvas
-                    ref={originalCanvas}
-                    width={SIZE}
-                    height={SIZE}
-                    onClick={selectPixel}
-                    aria-label="Gambar asli. Ketuk untuk memilih piksel; tersedia tombol arah di panel pembesar."
-                    role="img"
-                  />
-                </figure>
-                <figure className="encoded-figure">
-                  <figcaption className="mono">
-                    {output ? "BERISI PESAN" : "PRATINJAU HASIL"}
-                  </figcaption>
-                  <canvas
-                    ref={encodedCanvas}
-                    width={SIZE}
-                    height={SIZE}
-                    onClick={selectPixel}
-                    aria-label="Gambar hasil penyisipan pesan. Ketuk untuk memilih piksel; tersedia tombol arah di panel pembesar."
-                    role="img"
-                  />
-                </figure>
+              <div className="case-image-stage">
+                <canvas
+                  ref={sourceCanvas}
+                  width={CASE_SIZE}
+                  height={CASE_SIZE}
+                  hidden={view !== "original"}
+                  role="img"
+                  aria-label="Gambar asli untuk pembanding. Ketuk untuk memilih piksel; tombol arah juga tersedia."
+                  onClick={selectPixel}
+                />
+                <canvas
+                  ref={encodedCanvas}
+                  width={CASE_SIZE}
+                  height={CASE_SIZE}
+                  hidden={view !== "encoded"}
+                  role="img"
+                  aria-label="Gambar kiriman NCC dengan pesan tersembunyi. Ketuk untuk memilih piksel; tombol arah juga tersedia."
+                  onClick={selectPixel}
+                />
               </div>
               <p className="canvas-help">
-                <Icon name="eye" size={16} /> Ketuk gambar untuk memeriksa
-                pikselnya.
+                Terlihat sama? Sebagian nilai warnanya berbeda sangat sedikit.
               </p>
-              <div className="pixel-picker">
-                {names.map((name, i) => (
+              <div className="pixel-picker" aria-label="Pilih gambar kasus">
+                {caseImages.map((name, i) => (
                   <button
                     key={name}
-                    className={kind === i ? "selected" : ""}
                     aria-pressed={kind === i}
-                    onClick={() => {
-                      setKind(i);
-                      setPoint({ x: 0, y: 0 });
-                      invalidate();
-                    }}
+                    className={kind === i ? "selected" : ""}
+                    onClick={() => resetCase(i)}
                   >
                     <span className={`image-swatch swatch-${i}`} />
                     {name}
                   </button>
                 ))}
               </div>
-            </section>
-            <aside className="panel message-panel">
-              <span className="step-label mono">02 / PESAN RAHASIAMU</span>
-              <label htmlFor="secret">Apa yang ingin kamu sembunyikan?</label>
-              <textarea
-                id="secret"
-                value={message}
-                rows={3}
-                aria-describedby="byte-count"
-                onChange={(e) => {
-                  setMessage(e.target.value);
-                  invalidate();
-                }}
-                placeholder="Tulis pesan pendek…"
-              />
-              <p
-                id="byte-count"
-                className={`byte-count ${bytes > limit ? "over-limit" : ""}`}
-              >
-                {bytes} / {limit} byte UTF-8
-              </p>
-              {bytes > limit && (
-                <p role="alert">
-                  Pesan terlalu panjang. Kurangi {bytes - limit} byte untuk
-                  melanjutkan.
-                </p>
+              <button className="button primary full case-scan" onClick={scan}>
+                <Icon name="eye" /> Cari Petunjuk Piksel
+              </button>
+              {inspected && (
+                <section
+                  className="case-pixel-clue"
+                  aria-labelledby="clue-title"
+                >
+                  <h2 id="clue-title">Apa yang berubah?</h2>
+                  <div className="case-clue-data">
+                    <div className="magnifier">
+                      <canvas
+                        ref={zoom}
+                        width={210}
+                        height={210}
+                        role="img"
+                        aria-label={`Pembesaran gambar ${view === "encoded" ? "kiriman" : "asli"}, piksel ${point.x}, ${point.y}`}
+                      />
+                      <span className="mono">
+                        GRID 7 × 7 / ({point.x}, {point.y})
+                      </span>
+                    </div>
+                    <div className="pixel-values">
+                      <p className="mono">WARNA ASLI → KIRIMAN</p>
+                      <dl>
+                        {["R", "G", "B"].map((c, i) => (
+                          <div key={c}>
+                            <dt>{c}</dt>
+                            <dd>
+                              {original[index + i]} <span>→</span>{" "}
+                              <b>{encoded[index + i]}</b>
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <div
+                        className="direction-buttons"
+                        aria-label="Pilih koordinat piksel"
+                      >
+                        {[
+                          { name: "back", label: "Piksel kiri", x: -1, y: 0 },
+                          { name: "up", label: "Piksel atas", x: 0, y: -1 },
+                          { name: "down", label: "Piksel bawah", x: 0, y: 1 },
+                          { name: "arrow", label: "Piksel kanan", x: 1, y: 0 },
+                        ].map((d) => (
+                          <button
+                            key={d.label}
+                            className="icon-button"
+                            aria-label={d.label}
+                            onClick={() =>
+                              setPoint((p) => ({
+                                x: Math.max(
+                                  0,
+                                  Math.min(CASE_SIZE - 1, p.x + d.x),
+                                ),
+                                y: Math.max(
+                                  0,
+                                  Math.min(CASE_SIZE - 1, p.y + d.y),
+                                ),
+                              }))
+                            }
+                          >
+                            <Icon name={d.name} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  {channel === undefined ? (
+                    <p className="small-note">
+                      Piksel ini belum menunjukkan perubahan. Pilih Cari
+                      Petunjuk Piksel untuk menuju piksel yang berbeda.
+                    </p>
+                  ) : (
+                    <>
+                      <p>
+                        Nilai warna {["R", "G", "B"][channel]} bisa ditulis
+                        sebagai delapan angka 0 atau 1, yang disebut bit.
+                        Bandingkan kedua baris ini.
+                      </p>
+                      <div className="case-bit-comparison">
+                        <div>
+                          <span>Asli</span>
+                          <code>
+                            {original[index + channel]
+                              .toString(2)
+                              .padStart(8, "0")}
+                          </code>
+                        </div>
+                        <div>
+                          <span>Kiriman</span>
+                          <code>
+                            {encoded[index + channel]
+                              .toString(2)
+                              .padStart(8, "0")}
+                          </code>
+                        </div>
+                      </div>
+                      <fieldset className="bit-choices">
+                        <legend>Posisi angka mana yang berubah?</legend>
+                        {[
+                          { id: "left", label: "Paling kiri" },
+                          { id: "right", label: "Paling kanan" },
+                          { id: "all", label: "Semua angka" },
+                        ].map((choice) => (
+                          <button
+                            key={choice.id}
+                            className={`button ${analyzed && choice.id === "right" ? "primary" : "secondary"}`}
+                            disabled={analyzed}
+                            onClick={() => checkBit(choice.id)}
+                          >
+                            {analyzed && choice.id === "right" && (
+                              <Icon name="check" size={16} />
+                            )}{" "}
+                            {choice.label}
+                          </button>
+                        ))}
+                      </fieldset>
+                    </>
+                  )}
+                </section>
               )}
-              <button
-                className="button primary full"
-                disabled={!message.trim() || bytes > limit}
-                onClick={insert}
-              >
-                <Icon name="spark" /> Sisipkan Pesan
-              </button>
-              <button
-                className="button secondary full"
-                disabled={!output}
-                onClick={reveal}
-              >
-                <Icon name="eye" /> Ungkap Pesan
-              </button>
-              <p className="small-note">
-                Bukan sulap: satu bit terakhir pada sebagian kanal RGB diganti
-                untuk membawa pesanmu.
-              </p>
               <div className="feedback" role="status">
                 {feedback ||
-                  "Gambar sudah siap. Mulai dengan menyisipkan pesan."}
+                  "Mulai dengan mencari petunjuk piksel. Pesannya belum ditampilkan — kamu yang akan menemukannya."}
               </div>
+              <button
+                className="button secondary full case-read"
+                disabled={!analyzed || revealed !== null}
+                onClick={readMessage}
+              >
+                <Icon name="eye" /> Baca Pesan Tersembunyi
+              </button>
+              {!analyzed && (
+                <p className="small-note">
+                  Pembaca pesan siap setelah kamu menemukan posisi angka yang
+                  berubah.
+                </p>
+              )}
+            </section>
+            <aside className="panel pixel-case-file">
+              <span className="step-label mono">TARGET / BERKAS NCC</span>
+              <div className={`case-vault ${won ? "opened" : ""}`}>
+                <Icon name={won ? "check" : "shield"} size={48} />
+                <span className="mono">
+                  {won ? "AKSES DITERIMA" : "AKSES TERKUNCI"}
+                </span>
+              </div>
+              <h2>
+                {won ? "Berkas berhasil dibuka." : "Temukan kode aksesnya."}
+              </h2>
+              <p>
+                Kode disembunyikan di dalam gambar kiriman. Periksa petunjuknya,
+                baca pesan, lalu gunakan kode untuk membuka berkas ini.
+              </p>
+              {revealed !== null && (
+                <section
+                  className="decoded-message case-secret"
+                  aria-labelledby="secret-heading"
+                >
+                  <h3 ref={messageHeading} tabIndex={-1} id="secret-heading">
+                    Pesan dari dalam gambar
+                  </h3>
+                  <p>{revealed}</p>
+                </section>
+              )}
+              <form onSubmit={unlock}>
+                <label htmlFor="access-code">Kode akses berkas</label>
+                <input
+                  id="access-code"
+                  value={answer}
+                  disabled={revealed === null || won}
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={20}
+                  aria-describedby="code-help code-feedback"
+                  onChange={(e) => {
+                    setAnswer(e.target.value);
+                    setCodeFeedback("");
+                  }}
+                  placeholder="Masukkan kode dari pesan"
+                />
+                <p id="code-help" className="small-note">
+                  {revealed === null
+                    ? "Baca pesan tersembunyi terlebih dahulu."
+                    : "Salin kode akses yang tertulis pada pesan di atas."}
+                </p>
+                <button
+                  className="button primary full"
+                  disabled={revealed === null || !answer.trim() || won}
+                  type="submit"
+                >
+                  <Icon name={won ? "check" : "arrow"} size={18} />
+                  {won ? "Berkas Terbuka" : "Buka Berkas"}
+                </button>
+                <p id="code-feedback" className="code-feedback" role="status">
+                  {codeFeedback}
+                </p>
+              </form>
             </aside>
           </div>
-          <section className="pixel-inspector panel">
-            <div>
-              <p className="eyebrow">LIHAT LEBIH DEKAT</p>
-              <h2>Satu piksel, cerita berbeda.</h2>
-              <p>
-                Pilih piksel pada gambar atau gunakan tombol arah. Grid
-                menampilkan data gambar yang dipilih.
-              </p>
-              <div className="segmented" aria-label="Sumber data pembesar">
+          {won && (
+            <>
+              <Result index={0}>
+                <p>
+                  Kamu menemukan kode di dalam piksel dan membuka berkas NCC.
+                  Gambar yang terlihat biasa ternyata membawa informasi
+                  tambahan!
+                </p>
+              </Result>
+              <div className="pixel-next panel">
+                <div>
+                  <p className="eyebrow">MISTERI TERPECAHKAN</p>
+                  <h2>Sekarang, jadi pengirim pesan rahasia.</h2>
+                  <p>
+                    Coba tulis pesanmu sendiri, sisipkan ke gambar, lalu
+                    buktikan bahwa pesan itu bisa dibaca kembali.
+                  </p>
+                </div>
                 <button
-                  aria-pressed={view === "original"}
-                  onClick={() => setView("original")}
+                  className="button primary"
+                  disabled={workshop}
+                  onClick={() => setWorkshop(true)}
                 >
-                  Asli
-                </button>
-                <button
-                  aria-pressed={view === "encoded"}
-                  disabled={!output}
-                  onClick={() => setView("encoded")}
-                >
-                  Berisi Pesan
+                  {workshop
+                    ? "Eksperimen sudah terbuka"
+                    : "Sembunyikan Pesanmu Sendiri"}{" "}
+                  <Icon name="arrow" size={18} />
                 </button>
               </div>
               <button
-                className="text-link"
-                disabled={!output}
-                onClick={findChanged}
+                className="button secondary after-result"
+                onClick={() => resetCase()}
               >
-                Lihat Piksel yang Berubah <Icon name="arrow" size={16} />
+                <Icon name="reset" /> Main Lagi
               </button>
-            </div>
-            <div className="magnifier">
-              <canvas
-                ref={zoom}
-                width={210}
-                height={210}
-                aria-label={`Pembesaran piksel ${point.x}, ${point.y}`}
-                role="img"
-              />
-              <span className="mono">
-                GRID 7 × 7 / {view === "original" ? "ASLI" : "HASIL"}
-              </span>
-            </div>
-            <div className="pixel-values">
-              <p className="mono">
-                KOORDINAT ({point.x}, {point.y})
-              </p>
-              <dl>
-                {["R", "G", "B"].map((c, i) => (
-                  <div key={c}>
-                    <dt>{c}</dt>
-                    <dd>
-                      {original[index + i]} <span>→</span>{" "}
-                      <b>{output ? output[index + i] : "—"}</b>
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <div
-                className="direction-buttons"
-                aria-label="Pilih koordinat piksel"
-              >
-                {[
-                  { name: "back", label: "Piksel kiri", x: -1, y: 0 },
-                  { name: "up", label: "Piksel atas", x: 0, y: -1 },
-                  { name: "down", label: "Piksel bawah", x: 0, y: 1 },
-                  { name: "arrow", label: "Piksel kanan", x: 1, y: 0 },
-                ].map((d) => (
-                  <button
-                    className="icon-button"
-                    key={d.label}
-                    aria-label={d.label}
-                    onClick={() =>
-                      setPoint((p) => ({
-                        x: Math.max(0, Math.min(SIZE - 1, p.x + d.x)),
-                        y: Math.max(0, Math.min(SIZE - 1, p.y + d.y)),
-                      }))
-                    }
-                  >
-                    <Icon name={d.name} />
-                  </button>
-                ))}
-              </div>
-              {changedChannel !== undefined && output && (
-                <p className="bit-example mono">
-                  {original[index + changedChannel]
-                    .toString(2)
-                    .padStart(8, "0")}
-                  <br />↓<br />
-                  {output[index + changedChannel].toString(2).padStart(8, "0")}
-                  <br />
-                  <span>Hanya bit terakhir berubah.</span>
-                </p>
-              )}
-            </div>
-          </section>
-          {revealed !== null && (
-            <>
-              <Result index={0}>
-                <div className="decoded-message">
-                  <span className="mono">PESAN TERUNGKAP DARI PIKSEL</span>
-                  <p>{revealed}</p>
-                </div>
-              </Result>
-              <div className="button-row after-result">
-                <button className="button secondary" onClick={restart}>
-                  <Icon name="reset" /> Main Lagi
-                </button>
-                <button className="button secondary" onClick={download}>
-                  Unduh PNG
-                </button>
-                <p className="small-note">
-                  Gunakan PNG. Konversi ke JPEG dapat merusak pesan.
-                </p>
-              </div>
+              {workshop && <PixelWorkshop />}
             </>
           )}
         </>

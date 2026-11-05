@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 export const missions = [
   {
     id: "piksel",
-    name: "Pesan di Balik Piksel",
+    name: "Bongkar Pesan Rahasia",
     badge: "Pixel Detective",
     category: "STEGANOGRAFI",
-    description: "Satu gambar. Ribuan piksel. Sebuah pesan rahasia.",
+    description: "Temukan kode di dalam gambar untuk membuka berkas NCC.",
     concept:
       "Steganografi menyembunyikan keberadaan pesan di dalam media lain. Enkripsi menyamarkan isinya. Menyembunyikan pesan tidak otomatis mengenkripsinya.",
     ncc: "Steganografi berkaitan dengan keamanan informasi dan multimedia berbasis jaringan.",

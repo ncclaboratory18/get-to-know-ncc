@@ -24,11 +24,16 @@ Logika encoding/decoding perlu pemeriksaan otomatis karena kegagalan dapat terse
 | P3 | Periksa buffer asli dan hasil. | Alpha identik, RGB berubah maksimal satu per kanal, buffer asli tidak termutasi. |
 | P4 | Decode salinan buffer hasil secara terpisah tanpa akses ke state input. | Pesan tetap terbaca dari piksel. |
 | P5 | Uji header salah, panjang melebihi kapasitas, dan payload UTF-8 tidak valid. | Decoder memberi kesalahan terkontrol. Tidak mengklaim semua kerusakan pasti terdeteksi. |
-| P6 | Sisipkan pesan, lalu edit input atau ganti gambar. | Hasil lama dibatalkan dan perlu penyisipan ulang sebelum decoding. |
+| P6 | Dalam eksperimen bonus, sisipkan pesan lalu edit input atau ganti gambar. | Hasil lama dibatalkan dan perlu penyisipan ulang sebelum decoding. |
 | P7 | Pilih piksel melalui sentuhan dan tombol arah; gunakan Lihat Piksel yang Berubah. | Grid dan RGB sesuai buffer pada koordinat yang dipilih, termasuk tepi gambar. |
-| P8 | Gunakan Asli/Berisi Pesan pada HP. | Kedua tampilan dapat dibandingkan tanpa slider kecil. |
-| P9 | Encode dan decode valid, lalu main ulang. | Pixel Detective diberikan sekali dan tetap ada setelah reset percobaan. |
+| P8 | Gunakan Gambar Asli/Gambar Kiriman pada misi dan Asli/Berisi Pesan pada eksperimen bonus di HP. | Kedua tampilan dapat dibandingkan tanpa slider kecil. |
+| P9 | Pecahkan petunjuk, baca pesan, masukkan kode benar, lalu main ulang. | Pixel Detective diberikan setelah berkas terbuka dan tetap ada setelah reset percobaan. |
 | P10 | Jika unduhan PNG diimplementasikan, baca ulang PNG yang diunduh melalui Canvas. | Payload tetap dapat didecode. |
+| P11 | Buka misi baru. | Tujuan menemukan kode terlihat; input menulis pesan sendiri belum tersedia; pembaca dan input kode belum aktif. |
+| P12 | Jawab posisi bit salah, lalu benar. | Feedback memungkinkan perbaikan; hanya jawaban benar yang mengaktifkan pembaca pesan. |
+| P13 | Baca pesan lalu masukkan kode salah. | Belum ada lencana; pesan tetap tersedia dan kode bisa diperbaiki. |
+| P14 | Masukkan kode benar dengan huruf kecil atau melalui Enter. | Berkas terbuka, Pixel Detective diberikan, dan eksperimen bonus tersedia. |
+| P15 | Ganti gambar kasus setelah membaca pesan. | Pesan/kode lama dibatalkan, kode gambar baru berbeda, dan kode gambar sebelumnya ditolak. |
 
 ## 3. Kasus forensik
 

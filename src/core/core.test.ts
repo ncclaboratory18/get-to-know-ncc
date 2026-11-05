@@ -8,6 +8,37 @@ import {
 } from "./steganography";
 import { checkTimeline } from "./forensics";
 import { initialServer, resizeServers, stepServer } from "./server";
+import {
+  createPixelCase,
+  findChangedPixel,
+  matchesAccessCode,
+  CASE_SIZE,
+} from "./pixel-case";
+
+describe("kasus pesan rahasia", () => {
+  it.each([0, 1, 2])(
+    "gambar kasus %i menyimpan kode dan petunjuk nyata",
+    (kind) => {
+      const { original, encoded } = createPixelCase(kind);
+      const message = decode(encoded);
+      const code = /NCC-\d{3}/.exec(message)![0];
+      expect(matchesAccessCode(message, code.toLowerCase())).toBe(true);
+      expect(matchesAccessCode(message, "NCC-000")).toBe(false);
+      const point = findChangedPixel(original, encoded);
+      const index = (point.y * CASE_SIZE + point.x) * 4;
+      const changes = [0, 1, 2].filter(
+        (c) => original[index + c] !== encoded[index + c],
+      );
+      expect(changes.length).toBeGreaterThan(0);
+      for (const channel of changes)
+        expect(original[index + channel] ^ encoded[index + channel]).toBe(1);
+    },
+  );
+  it("tidak menerima kode tanpa pesan valid atau petunjuk tanpa perubahan", () => {
+    expect(matchesAccessCode("Tidak ada kode", "NCC-742")).toBe(false);
+    expect(() => findChangedPixel(makeImage(0), makeImage(0))).toThrow();
+  });
+});
 
 describe("steganografi nyata", () => {
   it.each(["Halo NCC!", "Halo, éksplorasi NCC! — aman ✓", "日本語"])(

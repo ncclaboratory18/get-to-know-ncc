@@ -7,25 +7,29 @@ Tanggal: 5 November 2026 (Asia/Jakarta). Implementasi lokal, belum dipublikasika
 | Pemeriksaan | Hasil | Cakupan |
 | --- | --- | --- |
 | TypeScript dan build produksi | Lulus | `npm run build`; keluaran statis di `dist/`. |
-| Logika inti | 9 pengujian lulus | `npm test`; UTF-8, kapasitas, alpha, perubahan kanal RGB, validasi format, kasus forensik, antrean, beban, biaya, menang/gagal. |
-| Alur browser | 12 skenario lulus | Enam alur dijalankan pada konfigurasi mobile dan desktop menggunakan Microsoft Edge headless melalui Playwright. |
+| Logika inti | 13 pengujian lulus | `npm test`; UTF-8, kapasitas, alpha, validasi format, tiga gambar kasus dengan kode/petunjuk nyata, pencocokan kode, forensik, antrean, beban, biaya, menang/gagal. |
+| Alur browser | 14 skenario lulus | Tujuh alur dijalankan pada konfigurasi mobile dan desktop menggunakan Microsoft Edge headless melalui Playwright. |
 | Lebar layar | Lulus pemeriksaan overflow | Seluruh tujuh layar pada lebar 360, 430, 768, dan 1280 px; pengujian alur utama juga memakai 390 × 844 px dan 1280 × 900 px. |
 | Reduced motion | Lulus pemeriksaan navigasi/layout | Seluruh layar dapat dibuka dengan preferensi gerak dikurangi. |
-| Pemeriksaan visual | Ditinjau | Screenshot pembuka dan forensik pada HP, serta server pada HP dan desktop. |
+| Pemeriksaan visual | Ditinjau | Screenshot pembuka, forensik, dan kasus pesan rahasia pada HP, serta server pada HP dan desktop. |
 | Kontras pasangan utama | Lulus target teks normal 4,5:1 | Teks utama/latar 14,62:1; teks sekunder/panel 6,26:1; teks utama/surface 7,58:1; teks gelap/tombol pink 5,95:1. Ini pemeriksaan pasangan warna, bukan audit aksesibilitas menyeluruh. |
 
-Setelah perbaikan terakhir, kelompok piksel/forensik/storage dan kelompok server/layout/jeda dijalankan ulang secara terpisah; masing-masing enam skenario lulus. Tidak menghitung pengulangan tersebut sebagai skenario baru.
+Skenario piksel mencakup jawaban bit keliru, kode salah, perbaikan jawaban, eksperimen bonus, unduhan PNG, serta reset tanpa kehilangan lencana. Pengujian tambahan memastikan pergantian gambar membatalkan kode lama. Pengulangan pemeriksaan tidak dihitung sebagai skenario baru.
 
 ## Alur yang terbukti berjalan
 
-1. Pembuka → peta → misi piksel → penyisipan UTF-8 → pembesar → decoding dari piksel → lencana → muat ulang → batal reset → konfirmasi reset.
+1. Pembuka → peta → gambar kiriman → petunjuk piksel → jawaban bit salah lalu benar → decoding dari piksel → kode salah lalu benar → berkas terbuka dan lencana → eksperimen menyisipkan pesan UTF-8 → mulai ulang → lencana tetap ada → muat ulang → batal reset → konfirmasi reset.
 2. Unduhan PNG dari Canvas dibuka kembali sebagai data RGBA di pengujian, kemudian didekode; pesan UTF-8 tetap identik.
 3. Pemilihan bukti → susunan keliru → feedback → perbaikan urutan → kesimpulan keliru → feedback → kesimpulan benar → Digital Investigator.
 4. Latihan server dengan antrean nyata → briefing → strategi 2/3/4/2 server → Cloud Architect. Strategi acuan berakhir dengan antrean nol dan sisa 6 kredit.
 5. Penyimpanan ditolak browser → informasi sesi sementara → misi tetap selesai; Petunjuk dapat ditutup dengan Escape dan fokus kembali ke pemicunya.
 6. Petunjuk tantangan dibuka → waktu dan biaya tidak berubah → petunjuk ditutup → tetap jeda → Lanjutkan → waktu bergerak kembali.
+7. Baca kode gambar pertama → ganti gambar → pesan/input kode lama dibersihkan → kode lama ditolak pada gambar baru → kode baru berhasil membuka berkas.
 
 ## Perbaikan dari hasil pemeriksaan
+
+- Misi steganografi diubah menjadi **Bongkar Pesan Rahasia** dengan tujuan menemukan kode untuk membuka berkas. Lencana diberikan setelah kode benar; pembuatan pesan sendiri tersedia sebagai bonus setelah berhasil.
+- Petunjuk bit dan kode berasal dari piksel gambar yang sedang diperiksa. Kode diverifikasi melalui decoding ulang Canvas ketika berkas dibuka.
 
 - Jam pengujian browser dipasang sebelum halaman membuat timer, mengikuti [panduan Clock Playwright](https://playwright.dev/docs/clock). Pemasangan setelah timer berjalan sempat membuat pengukuran tantangan tidak valid.
 - Langkah waktu simulasi server dipisahkan dari frame rendering. Beban, antrean, dan biaya dihitung pada mesin simulasi; Canvas dan indikator membaca hasil yang sama.

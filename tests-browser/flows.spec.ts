@@ -1,6 +1,25 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import sharp from "sharp";
 import { decode } from "../src/core/steganography";
+
+async function revealCase(page: Page) {
+  await expect(
+    page.getByRole("button", { name: "Baca Pesan Tersembunyi", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByLabel("Kode akses berkas")).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Cari Petunjuk Piksel", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Paling kanan", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Baca Pesan Tersembunyi", exact: true })
+    .click();
+  const message = await page.locator(".case-secret").innerText();
+  const code = /NCC-\d{3}/.exec(message)?.[0];
+  expect(code).toBeTruthy();
+  return code!;
+}
 
 test("peta, piksel UTF-8, lencana, dan reset pengunjung", async ({
   page,
@@ -20,6 +39,43 @@ test("peta, piksel UTF-8, lencana, dan reset pengunjung", async ({
     .click();
   await expect(page.locator(".mission-station")).toHaveCount(3);
   await page.locator(".mission-station").first().click();
+  await expect(page.getByLabel("Apa yang ingin kamu sembunyikan?")).toHaveCount(
+    0,
+  );
+  await page
+    .getByRole("button", { name: "Cari Petunjuk Piksel", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Paling kiri", exact: true }).click();
+  await expect(page.locator(".pixel-case-board .feedback")).toContainText(
+    "Coba bandingkan",
+  );
+  await expect(
+    page.getByRole("button", { name: "Baca Pesan Tersembunyi", exact: true }),
+  ).toBeDisabled();
+  const code = await revealCase(page);
+  await expect(
+    page.getByRole("heading", { name: "Pixel Detective", exact: true }),
+  ).toHaveCount(0);
+  await page.getByLabel("Kode akses berkas").fill("NCC-000");
+  await page.getByRole("button", { name: "Buka Berkas", exact: true }).click();
+  await expect(page.locator("#code-feedback")).toContainText(
+    "Kode belum cocok",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Pixel Detective", exact: true }),
+  ).toHaveCount(0);
+  await page.screenshot({
+    path: `test-results/pixel-case-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page.getByLabel("Kode akses berkas").fill(code.toLowerCase());
+  await page.getByLabel("Kode akses berkas").press("Enter");
+  await expect(
+    page.getByRole("heading", { name: "Pixel Detective", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Sembunyikan Pesanmu Sendiri", exact: true })
+    .click();
   await page
     .getByLabel("Apa yang ingin kamu sembunyikan?")
     .fill("Halo, éksplorasi NCC!");
@@ -30,7 +86,7 @@ test("peta, piksel UTF-8, lencana, dan reset pengunjung", async ({
     .getByRole("button", { name: "Lihat Piksel yang Berubah", exact: true })
     .click();
   await page.getByRole("button", { name: "Ungkap Pesan", exact: true }).click();
-  await expect(page.locator(".decoded-message")).toContainText(
+  await expect(page.locator(".pixel-workshop .decoded-message")).toContainText(
     "Halo, éksplorasi NCC!",
   );
   await expect(
@@ -43,7 +99,13 @@ test("peta, piksel UTF-8, lencana, dan reset pengunjung", async ({
   const pngPath = await download.path();
   const pixels = await sharp(pngPath!).ensureAlpha().raw().toBuffer();
   expect(decode(new Uint8ClampedArray(pixels))).toBe("Halo, éksplorasi NCC!");
-  await page.getByRole("link", { name: "Lihat Lencana", exact: true }).click();
+  await page.getByRole("button", { name: "Mulai Ulang", exact: true }).click();
+  await expect(page.locator(".pixel-workshop")).toHaveCount(0);
+  await expect(page.getByLabel("Kode akses berkas")).toBeDisabled();
+  await page
+    .getByRole("navigation", { name: "Navigasi utama" })
+    .getByRole("link", { name: /^Lencana/ })
+    .click();
   await expect(page.locator(".badge-card.earned")).toHaveCount(1);
   await page.reload();
   await expect(page.locator(".badge-card.earned")).toHaveCount(1);
@@ -188,10 +250,35 @@ test("fallback storage dan akses keyboard pada petunjuk", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: "Petunjuk", exact: true }),
   ).toBeFocused();
+  const code = await revealCase(page);
+  await page.getByLabel("Kode akses berkas").fill(code);
+  await page.getByRole("button", { name: "Buka Berkas", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Pixel Detective", exact: true }),
+  ).toBeVisible();
+});
+
+test("ganti gambar membatalkan pesan dan kode percobaan sebelumnya", async ({
+  page,
+}) => {
+  await page.goto("/#/misi/piksel");
+  const firstCode = await revealCase(page);
+  await page.getByLabel("Kode akses berkas").fill(firstCode);
   await page
-    .getByRole("button", { name: "Sisipkan Pesan", exact: true })
+    .getByRole("button", { name: "Gelombang Digital", exact: true })
     .click();
-  await page.getByRole("button", { name: "Ungkap Pesan", exact: true }).click();
+  await expect(page.locator(".case-secret")).toHaveCount(0);
+  await expect(page.getByLabel("Kode akses berkas")).toHaveValue("");
+  await expect(page.getByLabel("Kode akses berkas")).toBeDisabled();
+  const nextCode = await revealCase(page);
+  expect(nextCode).not.toBe(firstCode);
+  await page.getByLabel("Kode akses berkas").fill(firstCode);
+  await page.getByRole("button", { name: "Buka Berkas", exact: true }).click();
+  await expect(page.locator("#code-feedback")).toContainText(
+    "Kode belum cocok",
+  );
+  await page.getByLabel("Kode akses berkas").fill(nextCode);
+  await page.getByRole("button", { name: "Buka Berkas", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Pixel Detective", exact: true }),
   ).toBeVisible();

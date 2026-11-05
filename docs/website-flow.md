@@ -14,7 +14,7 @@ Gunakan navigasi hash agar tautan layar dan tombol Back browser bekerja pada hos
 | --- | --- | --- |
 | Pembuka | `#/` | Mengenalkan pengalaman dan mengajak mulai. |
 | Peta laboratorium | `#/misi` | Memilih tiga stasiun dan melihat progres. |
-| Pesan di Balik Piksel | `#/misi/piksel` | Menyisipkan dan mengungkap pesan dari gambar. |
+| Bongkar Pesan Rahasia | `#/misi/piksel` | Menemukan kode dalam gambar dan membuka berkas NCC; dilanjutkan eksperimen membuat pesan. |
 | Detektif Jejak Digital | `#/misi/jejak` | Menandai bukti, menyusun linimasa, memilih kesimpulan. |
 | Selamatkan Server! | `#/misi/server` | Latihan dan tantangan kapasitas layanan. |
 | Koleksi lencana | `#/lencana` | Melihat pencapaian dan memilih misi berikutnya. |
@@ -25,7 +25,7 @@ Hasil misi merupakan state dalam layar misi, sehingga konteks permainan tetap te
 ```mermaid
 flowchart TD
     A["Pembuka"] -->|Mulai Eksplorasi| B["Peta laboratorium: semua misi terbuka"]
-    B --> C["Pesan di Balik Piksel"]
+    B --> C["Bongkar Pesan Rahasia"]
     B --> D["Detektif Jejak Digital"]
     B --> E["Selamatkan Server!"]
     C --> F["Hasil: Pixel Detective"]
@@ -67,7 +67,7 @@ Peta berupa tiga stasiun yang dihubungkan jalur jaringan. Pada HP, susun stasiun
 
 | Stasiun | Deskripsi singkat | Bentuk visual | Status |
 | --- | --- | --- | --- |
-| Pesan di Balik Piksel | Sembunyikan pesanmu di dalam gambar, lalu bongkar kembali. | Meja pemindai, gambar, dan lensa grid piksel. | Belum dimainkan / Sedang dicoba / Selesai. |
+| Bongkar Pesan Rahasia | Temukan kode di dalam gambar untuk membuka berkas NCC. | Gambar kiriman, lensa grid piksel, dan berkas terkunci. | Belum dimainkan / Sedang dicoba / Selesai. |
 | Detektif Jejak Digital | Hubungkan bukti untuk menjelaskan perubahan berkas sekolah. | Berkas investigasi dan sambungan linimasa. | Belum dimainkan / Sedang dicoba / Selesai. |
 | Selamatkan Server! | Bagi permintaan agar gim sekolah tetap dapat diakses. | Server 2.5D dan jalur paket data. | Belum dimainkan / Sedang dicoba / Selesai. |
 
@@ -96,35 +96,43 @@ flowchart TD
 - Keluar dari misi menghentikan loop, timer, dan listener. Percobaan aktif tidak disimpan lintas muat ulang; peta menyimpan status pernah dicoba dan pencapaian.
 - Tidak perlu konfirmasi ketika berpindah misi. Jelaskan dekat tombol kembali: “Percobaan ini akan dimulai ulang saat dibuka kembali.”
 
-## 5. Misi 1 — Pesan di Balik Piksel
+## 5. Misi 1 — Bongkar Pesan Rahasia
+
+Tujuan pemain: **menemukan kode yang sudah tersembunyi di dalam gambar, lalu membuka berkas NCC**. Tujuan belajar: memahami bahwa gambar yang terlihat biasa dapat membawa informasi tambahan melalui perubahan kecil pada nilai piksel.
+
+Alur ini menggantikan demo memasukkan lalu membaca pesan sendiri sebagai aktivitas awal. Pembuatan pesan sendiri tetap tersedia sebagai eksperimen bonus setelah misi selesai.
 
 ### Alur interaksi
 
 ```mermaid
 flowchart TD
-    A["Pilih gambar contoh lokal atau prosedural"] --> B["Tulis pesan pendek"]
-    B --> C{"Pesan terisi dan muat dalam kapasitas?"}
-    C -->|Tidak| D["Tampilkan alasan dan sisa kapasitas"]
-    D --> B
-    C -->|Ya: Sisipkan Pesan| E["Encode UTF-8 ke LSB kanal RGB"]
-    E --> F["Bandingkan Asli / Berisi Pesan"]
-    F --> G["Periksa grid piksel dan nilai RGB"]
-    G --> H["Ungkap Pesan: baca piksel hasil"]
-    H --> I{"Header dan panjang valid?"}
-    I -->|Ya| J["Tampilkan pesan hasil decoding dan lencana"]
-    I -->|Tidak| K["Jelaskan kegagalan dan tawarkan sisipkan ulang"]
-    K --> B
+    A["Terima gambar kiriman dengan pesan yang sudah disisipkan"] --> B["Cari petunjuk piksel"]
+    B --> C["Bandingkan nilai warna asli dan kiriman"]
+    C --> D{"Posisi angka yang berubah ditemukan?"}
+    D -->|Belum| E["Petunjuk dan kesempatan mencoba kembali"]
+    E --> C
+    D -->|Ya| F["Baca Pesan Tersembunyi dari piksel Canvas"]
+    F --> G["Temukan kode akses dalam pesan"]
+    G --> H["Masukkan kode untuk membuka berkas"]
+    H --> I{"Kode cocok dengan hasil decoding?"}
+    I -->|Tidak| J["Feedback: baca kembali kode pada pesan"]
+    J --> H
+    I -->|Ya| K["Berkas terbuka dan Pixel Detective diperoleh"]
+    K --> L["Penjelasan konsep dan hubungan NCC"]
+    L --> M["Opsional: sembunyikan pesanmu sendiri"]
+    M --> N["Pilih gambar, tulis pesan, sisipkan, bandingkan, ungkap, unduh PNG"]
 ```
 
-1. Tampilkan tujuan “Cari tahu bagaimana sebuah gambar bisa menyimpan pesan rahasia.”
-2. Pilih salah satu dari tiga gambar prosedural: jaringan kota, gelombang digital, atau mosaik lab. Semua mengikuti palet.
-3. Input berlabel **Pesan rahasia**, dengan contoh “Sampai jumpa di NCC!”. Tampilkan jumlah byte UTF-8 dan kapasitas; jumlah karakter dapat berbeda dari byte.
-4. **Sisipkan Pesan** memproses salinan gambar asli. Saat berhasil, tampilkan “Kelihatannya sama, tetapi sebagian nilai pikselnya menyimpan pesanmu.”
-5. Desktop menampilkan sebelum/sesudah berdampingan. HP menggunakan tombol **Asli** dan **Berisi Pesan** dengan area gambar berukuran tetap.
-6. Ketuk/klik gambar untuk memilih piksel; kaca pembesar menampilkan grid terdekat, koordinat, dan nilai RGB asli serta hasil. Sediakan tombol arah untuk keyboard dan sentuhan.
-7. Tampilkan contoh perubahan bit dari piksel yang benar-benar berubah, misalnya kanal bernilai 72 menjadi 73. Sediakan **Lihat Piksel yang Berubah** agar pengunjung tidak harus menemukannya secara acak.
-8. **Ungkap Pesan** membaca ulang buffer piksel gambar hasil. Pesan yang terbaca ditampilkan pada panel hasil.
-9. Penyisipan yang diikuti decoding valid memberikan **Pixel Detective**. Pemeriksaan piksel dianjurkan tetapi tidak menjadi penghalang penyelesaian.
+1. Pengantar: “Sebuah gambar tiba dari laboratorium NCC. Di dalamnya ada kode untuk membuka berkas rahasia. Temukan kodenya!” Tampilkan tiga tahap: **Periksa gambar → Baca pesan → Buka berkas**.
+2. Gambar kiriman sudah memuat pesan melalui encoder LSB nyata. Pengunjung boleh memilih Kota Terhubung, Gelombang Digital, atau Mosaik Lab; masing-masing membawa kode kasus yang berbeda.
+3. Tombol **Gambar Asli / Gambar Kiriman** memungkinkan perbandingan pada HP maupun desktop. Pesan dan input pembuat pesan belum ditampilkan.
+4. **Cari Petunjuk Piksel** menuju piksel yang benar-benar berubah. Pengunjung juga dapat mengetuk gambar atau memakai tombol arah. Tampilkan grid 7 × 7 dan nilai RGB asli → kiriman.
+5. Tampilkan dua baris delapan angka dari kanal warna yang berbeda. Jelaskan bahwa angka 0/1 disebut bit, lalu tanyakan posisi angka yang berubah: paling kiri, paling kanan, atau semua angka.
+6. Jawaban keliru memberi petunjuk dan boleh diperbaiki. Jawaban paling kanan menjelaskan LSB dan mengaktifkan **Baca Pesan Tersembunyi**. Pembacaan piksel menggunakan alat bantu; pengunjung tidak perlu mengonversi seluruh pesan secara manual.
+7. Pembaca mengambil data dari Canvas kiriman, memvalidasi format, lalu menampilkan pesan beserta kode akses. Membaca pesan saja belum memberikan lencana.
+8. Pengunjung mengisi **Kode akses berkas** dan memilih **Buka Berkas** atau menekan Enter. Cocokkan kode dengan hasil decoding ulang Canvas. Jawaban keliru tidak menghapus petunjuk dan pesan.
+9. Kode benar membuka berkas dan memberikan **Pixel Detective**. Tampilkan penjelasan konsep, kaitan NCC, dan pilihan misi lain.
+10. Tombol opsional **Sembunyikan Pesanmu Sendiri** membuka eksperimen: pilih gambar → ketik pesan UTF-8 → Sisipkan Pesan → bandingkan/pembesar → Ungkap Pesan → unduh PNG. Eksperimen ini tidak menjadi syarat lencana atau menghasilkan lencana tambahan.
 
 ### Aturan data dan kondisi tepi
 
@@ -133,7 +141,9 @@ flowchart TD
 - Kapasitas payload: `floor(lebar × tinggi × 3 / 8) − 8` byte. Batas UI pesan pendek: nilai terkecil antara 160 byte dan kapasitas payload.
 - String kosong atau hanya spasi tidak dapat disisipkan. Isi pesan valid disimpan apa adanya tanpa normalisasi karakter.
 - Decoder memeriksa penanda, panjang terhadap kapasitas, dan validitas UTF-8 sebelum menampilkan hasil. Format ini tidak menjamin deteksi semua kerusakan isi; jangan mengklaim sebagai pemeriksaan integritas atau keamanan.
-- Mengubah pesan atau gambar membatalkan hasil encoding sebelumnya dan menonaktifkan **Ungkap Pesan** sampai penyisipan baru berhasil.
+- Mengganti gambar kasus atau Mulai Ulang membersihkan petunjuk, jawaban, pesan terbaca, kode input, dan eksperimen bonus; lencana yang telah diperoleh tetap tersimpan.
+- Kode yang benar berasal dari payload hasil decoding, bukan hardcode pada tombol atau state input. Bentuk kode `NCC-123`; abaikan huruf besar/kecil dan spasi di awal/akhir jawaban. Ini permainan edukasi, bukan kontrol akses keamanan sungguhan.
+- Dalam eksperimen bonus, mengubah pesan atau gambar membatalkan hasil encoding sebelumnya dan menonaktifkan **Ungkap Pesan** sampai penyisipan baru berhasil.
 - Gambar asli dan hasil disimpan terpisah. Pembesaran membaca data gambar, tanpa smoothing yang mengaburkan sel piksel.
 - Palet berlaku pada gambar dasar. Perubahan numerik maksimal satu pada kanal RGB karena LSB adalah data demonstrasi, bukan penambahan aksen visual baru.
 - Unduhan opsional menggunakan PNG hasil encoding. Jika disediakan, tombol berfungsi dan menjelaskan bahwa konversi JPEG dapat merusak pesan.
@@ -360,7 +370,7 @@ Gradasi dan transparansi berasal dari palet ini. Berhasil, peringatan, dan gagal
 | Area | HP 360–430 px | Desktop |
 | --- | --- | --- |
 | Misi | Judul → tujuan → instruksi → permainan → kontrol → feedback. | Permainan dan panel instruksi/kontrol berdampingan. |
-| Piksel | Tombol Asli/Berisi Pesan, satu gambar aktif, pembesar di bawah. | Dua gambar sejajar dan pembesar di samping/bawah. |
+| Piksel | Tahap misi → gambar → petunjuk → pesan/kode → hasil → eksperimen opsional. | Gambar/petunjuk di kiri, berkas terkunci dan pesan/kode di kanan; eksperimen bonus memakai perbandingan sejajar. |
 | Forensik | Berkas bukti diikuti linimasa vertikal, tombol Naik/Turun. | Meja bukti dan linimasa berdampingan. |
 | Server | Jalur pengguna → pembagi → server menyesuaikan lebar; indikator ringkas di bawah. | Visual jaringan luas, indikator dan kontrol di samping. |
 | Hasil | Bagian lanjutan di layar yang sama, fokus ke judul hasil. | Panel hasil memperluas penjelasan tanpa menutupi kontrol keluar. |

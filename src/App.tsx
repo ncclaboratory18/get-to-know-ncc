@@ -130,7 +130,7 @@ function Home() {
           <a
             href="#/misi/piksel"
             className="floating-station floating-pixel"
-            aria-label="Buka misi Pesan di Balik Piksel"
+            aria-label="Buka misi Bongkar Pesan Rahasia"
           >
             <MissionArt kind={0} />
             <span className="station-label mono">
