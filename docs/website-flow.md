@@ -111,7 +111,7 @@ flowchart TD
     C --> D{"Posisi angka yang berubah ditemukan?"}
     D -->|Belum| E["Petunjuk dan kesempatan mencoba kembali"]
     E --> C
-    D -->|Ya| F["Baca Pesan Tersembunyi dari piksel Canvas"]
+    D -->|Ya| F["Baca Pesan Tersembunyi dari buffer piksel RGBA"]
     F --> G["Temukan kode akses dalam pesan"]
     G --> H["Masukkan kode untuk membuka berkas"]
     H --> I{"Kode cocok dengan hasil decoding?"}
@@ -129,8 +129,8 @@ flowchart TD
 4. **Cari Petunjuk Piksel** menuju piksel yang benar-benar berubah. Pengunjung juga dapat mengetuk gambar atau memakai tombol arah. Tampilkan grid 7 × 7 dan nilai RGB asli → kiriman.
 5. Tampilkan dua baris delapan angka dari kanal warna yang berbeda. Jelaskan bahwa angka 0/1 disebut bit, lalu tanyakan posisi angka yang berubah: paling kiri, paling kanan, atau semua angka.
 6. Jawaban keliru memberi petunjuk dan boleh diperbaiki. Jawaban paling kanan menjelaskan LSB dan mengaktifkan **Baca Pesan Tersembunyi**. Pembacaan piksel menggunakan alat bantu; pengunjung tidak perlu mengonversi seluruh pesan secara manual.
-7. Pembaca mengambil data dari Canvas kiriman, memvalidasi format, lalu menampilkan pesan beserta kode akses. Membaca pesan saja belum memberikan lencana.
-8. Pengunjung mengisi **Kode akses berkas** dan memilih **Buka Berkas** atau menekan Enter. Cocokkan kode dengan hasil decoding ulang Canvas. Jawaban keliru tidak menghapus petunjuk dan pesan.
+7. Pembaca mengambil buffer piksel RGBA yang juga dipakai menggambar Canvas kiriman, memvalidasi format, lalu menampilkan pesan beserta kode akses. Tidak memakai readback Canvas yang dapat diberi noise oleh perlindungan fingerprinting browser. Membaca pesan saja belum memberikan lencana.
+8. Pengunjung mengisi **Kode akses berkas** dan memilih **Buka Berkas** atau menekan Enter. Cocokkan kode dengan hasil decoding ulang buffer piksel. Jawaban keliru tidak menghapus petunjuk dan pesan.
 9. Kode benar membuka berkas dan memberikan **Pixel Detective**. Tampilkan penjelasan konsep, kaitan NCC, dan pilihan misi lain.
 10. Tombol opsional **Sembunyikan Pesanmu Sendiri** membuka eksperimen: pilih gambar → ketik pesan UTF-8 → Sisipkan Pesan → bandingkan/pembesar → Ungkap Pesan → unduh PNG. Eksperimen ini tidak menjadi syarat lencana atau menghasilkan lencana tambahan.
 
@@ -146,7 +146,7 @@ flowchart TD
 - Dalam eksperimen bonus, mengubah pesan atau gambar membatalkan hasil encoding sebelumnya dan menonaktifkan **Ungkap Pesan** sampai penyisipan baru berhasil.
 - Gambar asli dan hasil disimpan terpisah. Pembesaran membaca data gambar, tanpa smoothing yang mengaburkan sel piksel.
 - Palet berlaku pada gambar dasar. Perubahan numerik maksimal satu pada kanal RGB karena LSB adalah data demonstrasi, bukan penambahan aksen visual baru.
-- Unduhan opsional menggunakan PNG hasil encoding. Jika disediakan, tombol berfungsi dan menjelaskan bahwa konversi JPEG dapat merusak pesan.
+- Unduhan menggunakan PNG yang dienkode langsung dari buffer RGBA sumber, tanpa `Canvas.toBlob`, sehingga bit pesan tidak berubah akibat noise ekspor Canvas. Tombol menjelaskan bahwa konversi JPEG dapat merusak pesan.
 - Bila Canvas tidak tersedia, tampilkan alasan misi ini tidak dapat dimainkan dan akses ke dua misi lain; jangan memberikan lencana palsu.
 
 ### Penjelasan setelah selesai

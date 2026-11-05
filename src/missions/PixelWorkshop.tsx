@@ -7,6 +7,7 @@ import {
   makeImage,
 } from "../core/steganography";
 import { Icon } from "../components/Visuals";
+import { encodePng } from "../core/png";
 
 const SIZE = 192;
 const names = ["Kota Terhubung", "Gelombang Digital", "Mosaik Lab"];
@@ -74,10 +75,7 @@ export default function PixelWorkshop() {
   }
   function insert() {
     try {
-      const ctx = originalCanvas.current?.getContext("2d");
-      if (!ctx) throw new Error("Canvas tidak tersedia.");
-      const pixels = ctx.getImageData(0, 0, SIZE, SIZE).data;
-      setOutput(encode(pixels, message));
+      setOutput(encode(original, message));
       setView("encoded");
       setRevealed(null);
       setFeedback(
@@ -89,9 +87,8 @@ export default function PixelWorkshop() {
   }
   function reveal() {
     try {
-      const ctx = encodedCanvas.current?.getContext("2d");
-      if (!ctx) throw new Error("Canvas tidak tersedia.");
-      setRevealed(decode(ctx.getImageData(0, 0, SIZE, SIZE).data));
+      if (!output) throw new Error("Sisipkan pesan terlebih dahulu.");
+      setRevealed(decode(output));
       setFeedback("Pesan berhasil dibaca langsung dari piksel gambar.");
     } catch (e) {
       setFeedback((e as Error).message);
@@ -126,15 +123,20 @@ export default function PixelWorkshop() {
     }
   }
   function download() {
-    encodedCanvas.current?.toBlob((blob) => {
-      if (!blob) return;
+    if (!output) return;
+    try {
+      // Ekspor dari RGBA sumber agar noise Canvas tidak merusak PNG.
+      const png = encodePng(output, SIZE, SIZE);
+      const blob = new Blob([png], { type: "image/png" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = "ncc-pesan-rahasia.png";
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }, "image/png");
+    } catch (e) {
+      setFeedback((e as Error).message);
+    }
   }
   return (
     <section className="pixel-workshop" aria-labelledby="workshop-title">

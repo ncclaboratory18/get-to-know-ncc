@@ -34,6 +34,9 @@ Logika encoding/decoding perlu pemeriksaan otomatis karena kegagalan dapat terse
 | P13 | Baca pesan lalu masukkan kode salah. | Belum ada lencana; pesan tetap tersedia dan kode bisa diperbaiki. |
 | P14 | Masukkan kode benar dengan huruf kecil atau melalui Enter. | Berkas terbuka, Pixel Detective diberikan, dan eksperimen bonus tersedia. |
 | P15 | Ganti gambar kasus setelah membaca pesan. | Pesan/kode lama dibatalkan, kode gambar baru berbeda, dan kode gambar sebelumnya ditolak. |
+| P16 | Simulasikan noise pada `getImageData` dan `toBlob`, lalu mainkan misi dan eksperimen bonus. | Pembacaan pesan, pembukaan berkas, dan ekspor PNG tetap benar; tidak perlu mematikan proteksi privasi. |
+| P17 | Bersihkan bitmap Canvas tampilan setelah petunjuk ditemukan. | Pembaca tetap dapat membaca buffer piksel sumber. |
+| P18 | Bandingkan gambar asli/kiriman, ulangi misi, dan baca ketiga pilihan gambar. | Semua kode dapat ditemukan dan digunakan, termasuk saat Canvas kiriman sedang tersembunyi. |
 
 ## 3. Kasus forensik
 

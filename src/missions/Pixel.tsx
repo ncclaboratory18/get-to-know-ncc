@@ -124,9 +124,9 @@ export default function Pixel() {
   function readMessage() {
     if (!analyzed) return;
     try {
-      const ctx = encodedCanvas.current?.getContext("2d");
-      if (!ctx) throw new Error("Canvas tidak tersedia.");
-      setRevealed(decode(ctx.getImageData(0, 0, CASE_SIZE, CASE_SIZE).data));
+      // Decode sumber RGBA yang juga dirender ke Canvas. Readback Canvas
+      // dapat diberi noise oleh perlindungan fingerprinting browser.
+      setRevealed(decode(encoded));
       setCodeFeedback("");
     } catch (e) {
       setFeedback((e as Error).message);
@@ -136,11 +136,7 @@ export default function Pixel() {
     e.preventDefault();
     if (!analyzed || revealed === null) return;
     try {
-      const ctx = encodedCanvas.current?.getContext("2d");
-      if (!ctx) throw new Error("Canvas tidak tersedia.");
-      const freshMessage = decode(
-        ctx.getImageData(0, 0, CASE_SIZE, CASE_SIZE).data,
-      );
+      const freshMessage = decode(encoded);
       if (matchesAccessCode(freshMessage, answer)) {
         setWon(true);
         setCodeFeedback("");

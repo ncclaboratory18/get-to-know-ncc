@@ -4,7 +4,7 @@ Website interaktif untuk memperkenalkan Laboratorium Net-Centric Computing, Depa
 
 Tiga misi dapat dimainkan bebas tanpa akun atau backend:
 
-- **Bongkar Pesan Rahasia:** selidiki piksel gambar kiriman, pecahkan petunjuk, baca kode tersembunyi, dan buka berkas NCC. Setelah berhasil, coba menyisipkan pesan UTF-8 sendiri dan mengunduh hasil PNG. Penyisipan serta decoding memakai LSB RGB nyata melalui Canvas.
+- **Bongkar Pesan Rahasia:** selidiki piksel gambar kiriman, pecahkan petunjuk, baca kode tersembunyi, dan buka berkas NCC. Setelah berhasil, coba menyisipkan pesan UTF-8 sendiri dan mengunduh hasil PNG. Penyisipan serta decoding memakai LSB RGB nyata pada buffer RGBA yang juga dirender ke Canvas.
 - **Detektif Jejak Digital:** kasus fiktif, pemilihan bukti, linimasa dengan tombol pengurutan, dan kesimpulan berdasarkan bukti.
 - **Selamatkan Server!:** latihan kapasitas serta tantangan 30 detik dengan distribusi permintaan, antrean, anggaran, dan lonjakan terjadwal.
 
@@ -36,6 +36,15 @@ npm run test:browser
 ```
 
 Pengujian logika memakai Vitest. Pengujian browser memakai Playwright dengan Microsoft Edge yang terpasang, pada viewport HP 390 × 844 dan desktop 1280 × 900. Playwright menyalakan dev server sendiri jika port 5173 belum digunakan. Jika Edge tidak tersedia, sesuaikan `channel` di `playwright.config.ts` dengan browser yang tersedia.
+
+Untuk menjalankan E2E langsung dengan Brave di PowerShell, gunakan lokasi executable yang sesuai:
+
+```powershell
+$env:BRAVE_EXECUTABLE = 'C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe'
+npm run test:browser
+```
+
+Skenario regresi steganografi juga mensimulasikan noise pada pembacaan/ekspor Canvas. Decoder dan ekspor PNG memakai buffer RGBA sumber sehingga tetap bekerja dengan perlindungan fingerprinting browser, tanpa mengambil pesan dari state teks input.
 
 Lihat [hasil verifikasi](docs/verification-results.md), [rencana pemeriksaan lengkap](docs/verification-plan.md), dan [alur website](docs/website-flow.md).
 
