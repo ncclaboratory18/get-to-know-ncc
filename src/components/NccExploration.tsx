@@ -290,8 +290,8 @@ export default function NccExploration() {
             </h2>
           </div>
           <p>
-            Lima profesi dalam materi Safari Lab NCC. Pilih profesinya untuk
-            melihat ilustrasi dan pekerjaan yang dilakukan.
+            Pilih profesinya untuk melihat ilustrasi dan pekerjaan yang
+            dilakukan.
           </p>
         </div>
         <div className="career-layout">
